@@ -38,8 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+   
+    'accounts',
 ]
 
+#session middleware must be before message middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -84,6 +87,8 @@ DATABASES = {
     }
 }
 
+#tell django u r using custom user model
+AUTH_USER_MODEL = 'accounts.User'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -125,7 +130,24 @@ STATICFILES_DIRS = [
     'foodonline_main/static'
 ]
 
+#Media File configuration
+MEDIA_URL= '/media/'
+MEDIA_ROOT = BASE_DIR/'media'
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+#message can success or error ..to handle them we need message.tag
+
+
+from django.contrib.messages import constants as message_constants
+MESSAGE_TAGS = {message_constants.DEBUG: 'debug',
+                message_constants.INFO: 'info',
+                message_constants.SUCCESS: 'success',
+                message_constants.WARNING: 'warning',
+                message_constants.ERROR: 'danger',}
+#danger is for bootstrap class which is an error msg 
