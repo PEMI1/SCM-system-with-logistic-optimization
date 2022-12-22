@@ -41,10 +41,10 @@ class UserManager(BaseUserManager):  # never contains any field, only contains m
 
 #by extending the AbstractBaseUser we are now customizing the user model and also django authentication function
 class User(AbstractBaseUser): # this class will contain fields and methods
-    RESTAURANT = 1
+    VENDOR = 1
     CUSTOMER = 2
     ROLE_CHOICE =(
-        (RESTAURANT, 'Restaurant'),
+        (VENDOR, 'Vendor'),
         (CUSTOMER, 'Customer'),
     )
 
