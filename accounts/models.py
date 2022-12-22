@@ -76,8 +76,20 @@ class User(AbstractBaseUser): # this class will contain fields and methods
     def has_perm(self, perm, ob=None):  # only returns true if user is admin
         return self.is_admin
     
-    def has_module_perms(self, app_label):  # only returns true is uer is superuser so this model is only accessed by admin and superuser
+    def has_module_perms(self, app_label):  # only returns true if user is superuser so this model is only accessed by admin and superuser
         return True
+
+    #custom function responsible to tell if user is Vendor or Customer 
+    #above we have defined 'role' field of 'User' model to be either of 2 constants: 1/2
+    #So this role is checked and accordingly user_role is assigned Vendor or Customer 
+    #this user_role is returned when get_role function is called by Dashboard.html
+    def get_role(self):  # here self mean user/object of User clas
+        if self.role == 1:
+            user_role = 'Vendor'
+        elif self.role == 2:
+            user_role = 'Customer'
+        return user_role
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True)
