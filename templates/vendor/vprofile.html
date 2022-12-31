@@ -1,16 +1,12 @@
+{% extends 'base.html' %}
 
-{% extends 'base.html'%}
 {%load static%}
 
 {%block content%}
 
-{% comment %} <h2>Welcome {{user.username}}!</h2>
-<p>This is a {{user.get_role}}</p>  <!--get_role is a custom function of User class which is accessed as a field of User class/model--> {% endcomment %}
-
-
 	<!-- Main Section Start -->
     <div class="main-section">
-       {% include 'includes/cover.html'%}
+       {%include 'includes/cover.html'%}
         <div class="page-section account-header buyer-logged-in">
             <div class="container">
                 <div class="row">
@@ -21,40 +17,7 @@
                     <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
                         <div class="user-dashboard loader-holder">
                             <div class="user-holder">
-                                <h5 class="text-uppercase">OVERVIEW</h5>
-                                <div class="row">
-                                    <div  class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                Total Orders
-                                            </div>
-                                            <div class="card-body text-center">
-                                                <a href="#"><h5 class="card-title">123</h5></a> 
-                                            </div>
-                                        </div>                                        
-                                    </div>
-                                    <div  class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                Total Revenue
-                                            </div>
-                                            <div class="card-body text-center">
-                                                <a href="#"><h5 class="card-title">$1234.56</h5></a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div  class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                This Month
-                                            </div>
-                                            <div class="card-body text-center">
-                                                <a href="#"><h5 class="card-title">$165.00</h5></a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
+                                
                                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                     <div class="row">
                                         <div class="element-title has-border right-filters-row">
@@ -133,5 +96,4 @@
 
 {% include 'includes/alerts.html'%}
 
-
-{%endblock%}
+{% endblock %}
