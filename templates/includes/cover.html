@@ -19,7 +19,8 @@
                             <span class="restaurant-title">{{vendor.vendor_name}}</span>
                             <div class="text">
                                 <i class="icon-location"></i>
-                                <p>{{vendor.user_profile.full_address}}</p>
+                                {% comment %} <p>{{vendor.user_profile.full_address}}</p> {% endcomment %}
+                                <p>{{vendor.user_profile.address}}</p>
                             </div>
                         </div>
                     </div>
