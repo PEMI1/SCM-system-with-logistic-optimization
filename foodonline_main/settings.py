@@ -41,6 +41,7 @@ INSTALLED_APPS = [
    
     'accounts',
     'vendor',
+    'menu',
 ]
 
 #session middleware must be before message middleware
