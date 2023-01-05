@@ -42,8 +42,10 @@ INSTALLED_APPS = [
     'accounts',
     'vendor',
     'menu',
+    'marketplace',
 ]
 
+#middlewares are wrapper functions called globally to perform action before or after view
 #session middleware must be before message middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,6 +55,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'marketplace.middleware.AjaxMiddleware',
 ]
 
 ROOT_URLCONF = 'foodonline_main.urls'
@@ -69,6 +73,10 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.get_vendor',
+
+                'marketplace.context_processors.get_cart_counter',
+                'marketplace.context_processors.get_cart_amounts',
+                
             ],
         },
     },

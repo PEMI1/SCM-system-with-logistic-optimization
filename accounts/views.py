@@ -6,6 +6,8 @@ from vendor.models import Vendor
 from .forms import UserForm
 from .models import User, UserProfile
 
+from django.template.defaultfilters import slugify
+
 #for showing messages popup
 from django.contrib import messages
 
@@ -113,6 +115,10 @@ def registerVendor(request):
             #save the data(contains name,email...of user also the restaurant name and license of vendor) from the vendor form into vendor object
             vendor = v_form.save(commit=False)  # we need to provide user and userprofile before saving the vendor
             vendor.user = user  # when user.save() is triggered signal post_save() will create the user..this user is what we are getting here
+            
+            vendor_name = v_form.cleaned_data['vendor_name']
+            vendor.vendor_slug = slugify(vendor_name)+'-'+str(user.id)
+            
             user_profile = UserProfile.objects.get(user=user)  
             vendor.user_profile = user_profile
             vendor.save()
