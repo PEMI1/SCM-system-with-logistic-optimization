@@ -2,7 +2,7 @@ from .models import Cart
 from menu.models import Product
 
 
-
+#overall products count
 def get_cart_counter(request):
     cart_count=0
     if request.user.is_authenticated:

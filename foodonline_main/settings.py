@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'menu',
     'marketplace',
     'customers',
+    'orders',
 ]
 
 #middlewares are wrapper functions called globally to perform action before or after view
@@ -75,6 +76,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.get_vendor',
                 'accounts.context_processors.get_google_api',
+                'accounts.context_processors.get_paypal_client_id',
                 
 
                 'marketplace.context_processors.get_cart_counter',
@@ -174,8 +176,13 @@ EMAIL_PORT = config('EMAIL_PORT',cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'foodOnline Marketplace <junkmailsgo@gmail.com>'
+DEFAULT_FROM_EMAIL = 'SCM Marketplace <scm@gmail.com>'
 
 
 
-GOOGLE_API_KEY='AIzaSyDXE1rXYd-ME0olIDa68K_PG4tZfMNNKfs'
+GOOGLE_API_KEY=config('GOOGLE_API_KEY')
+
+
+PAYPAL_CLIENT_ID= config('PAYPAL_CLIENT_ID')
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
