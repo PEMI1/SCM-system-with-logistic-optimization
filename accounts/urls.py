@@ -5,13 +5,19 @@ urlpatterns = [
     path('', views.myAccount),
 
     path('registerUser/', views.registerUser, name='registerUser'),
+    path('registerMerchant/', views.registerMerchant, name='registerMerchant'),
+
     path('registerVendor/', views.registerVendor, name='registerVendor'),
+    path('registerShipper/', views.registerShipper, name='registerShipper'),
+
     
     path('login/', views.login, name= 'login'),
     path('logout/', views.logout, name= 'logout'),
     path('myAccount/',views.myAccount, name ='myAccount'),
     path('custDashboard/', views.custDashboard, name= 'custDashboard'),
     path('vendorDashboard/', views.vendorDashboard, name= 'vendorDashboard'),
+    path('shipperDashboard/', views.shipperDashboard, name= 'shipperDashboard'),
+
 
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
 
@@ -21,6 +27,8 @@ urlpatterns = [
 
     path('vendor/', include('vendor.urls')),
     path('customer/', include('customers.urls')),
+    path('shipper/', include('shipper.urls')),
+
 
 ]
 

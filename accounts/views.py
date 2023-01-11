@@ -1,6 +1,8 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
+from shipper.forms import ShipperForm
+from shipper.models import Shipper
 from vendor.forms import VendorForm
 from vendor.models import Vendor
 from .forms import UserForm
@@ -24,6 +26,8 @@ from django.core.exceptions import PermissionDenied
 from .utils import send_verification_email 
 #from .utils import send_password_reset_email
 
+from orders.models import Order
+
 # Restrict the vendor from accessing the customer page
 def check_role_vendor(user):
     if user.role ==1:
@@ -39,6 +43,12 @@ def check_role_customer(user):
     else:
         raise PermissionDenied 
 
+
+def check_role_shipper(user):
+    if user.role ==3:
+        return True
+    else:
+        raise PermissionDenied 
 
 
 def registerUser(request):
@@ -88,6 +98,10 @@ def registerUser(request):
         'form':form,
     }
     return render(request,'accounts/registerUser.html',context)
+
+
+def registerMerchant(request):
+    return render(request, 'accounts/registerMerchant.html')
 
 
 def registerVendor(request):
@@ -145,6 +159,62 @@ def registerVendor(request):
         'v_form':v_form,
     }
     return render(request, 'accounts/registerVendor.html',context)
+
+def registerShipper(request):
+    #restrict user from acessing registerShipper page from url if he is already logged in
+    if request.user.is_authenticated:
+        messages.warning(request,'You are already logged in!')
+        return redirect('myAccount')
+
+    if request.method=='POST':
+        #store the data and create the user
+        form = UserForm(request.POST)  # pass data we are getting from the post into UserForm and store the instance as form
+        s_form = ShipperForm(request.POST, request.FILES)  # we must also receive the license image so also pass request.files
+
+        if form.is_valid() and s_form.is_valid():
+            first_name= form.cleaned_data['first_name']
+            last_name= form.cleaned_data['last_name']
+            username= form.cleaned_data['username']
+            email= form.cleaned_data['email']
+            password= form.cleaned_data['password']
+
+            user= User.objects.create_user(first_name=first_name, last_name=last_name,username=username,email=email, password=password, )
+            user.role=User.SHIPPER
+            user.save()
+
+            #save the data(contains name,email...of user also the restaurant name and license of shipper) from the shipper form into shipper object
+            shipper = s_form.save(commit=False)  # we need to provide user and userprofile before saving the shipper
+            shipper.user = user  # when user.save() is triggered signal post_save() will create the user..this user is what we are getting here
+            
+            shipper_name = s_form.cleaned_data['shipper_name']
+            shipper.shipper_slug = slugify(shipper_name)+'-'+str(user.id)
+            
+            user_profile = UserProfile.objects.get(user=user)  
+            shipper.user_profile = user_profile
+            shipper.save()
+
+            #send verification email
+            #send_verification_email(request,user )
+            mail_subject = 'Please activate your account'
+            email_template ='accounts/emails/account_verification_email.html'
+            send_verification_email(request,user,mail_subject,email_template )
+
+
+            messages.success(request,'Your account has been registered successfully! Please wait for the approval.')
+            return redirect('registerShipper')
+        else:
+            print('invalid form')
+            print(form.errors)
+   
+    else:
+        form = UserForm()
+        s_form = ShipperForm()
+
+    context={
+        'form':form,
+        's_form':s_form,
+    }
+    return render(request, 'accounts/registerShipper.html',context)
 
 
 def activate(request, uidb64, token):
@@ -208,7 +278,14 @@ def myAccount(request):
 @login_required(login_url='login')
 @user_passes_test(check_role_customer)  #this decorator ensures that 'check_role_customer' function is checked(returns true) before allowing the user to access the customer dashboard
 def custDashboard(request):
-    return render(request, 'accounts/custDashboard.html')
+    orders = Order.objects.filter(user=request.user, is_ordered=True)
+    recent_orders = orders[:5]
+    context= {
+        'orders' : orders,
+        'orders_count' : orders.count(),
+        'recent_orders':recent_orders,
+    }
+    return render(request, 'accounts/custDashboard.html',context)
 
 @login_required(login_url='login')
 @user_passes_test(check_role_vendor) 
@@ -216,6 +293,11 @@ def vendorDashboard(request):
     
     return render(request, 'accounts/vendorDashboard.html')
 
+@login_required(login_url='login')
+@user_passes_test(check_role_shipper) 
+def shipperDashboard(request):
+    
+    return render(request, 'accounts/shipperDashboard.html')
 
 
 

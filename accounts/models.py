@@ -43,9 +43,12 @@ class UserManager(BaseUserManager):  # never contains any field, only contains m
 class User(AbstractBaseUser): # this class will contain fields and methods
     VENDOR = 1
     CUSTOMER = 2
+    SHIPPER = 3
     ROLE_CHOICE =(
         (VENDOR, 'Vendor'),
         (CUSTOMER, 'Customer'),
+        (SHIPPER, 'Shipper'),
+
     )
 
     first_name = models.CharField(max_length=50)
@@ -88,6 +91,8 @@ class User(AbstractBaseUser): # this class will contain fields and methods
             user_role = 'Vendor'
         elif self.role == 2:
             user_role = 'Customer'
+        elif self.role == 3:
+            user_role = 'Shipper'
         return user_role
 
 

@@ -1,0 +1,56 @@
+{%extends 'base.html'%}
+{%load static%}
+
+{%block content%}
+<!-- Main Section Start -->
+<div class="main-section">
+    <div class="page-section nopadding cs-nomargin" style="margin-top: 0px;padding-top: 60px;padding-bottom: 60px;margin-bottom: 0px;">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 ">
+                    <div class="user-dashboard loader-holder">
+                        <div class="user-holder">
+                    <h4 class="text-center" style="margin-bottom: 0;">PATNER WITH SCM</h4>
+                    <p class="text-center">What Is Your Business?</p>
+                    <hr>
+                    <div id="restaurant-sets-holder">
+                        
+                        
+                            <ul class="register-add-restaurant-tab-container restaurant-information-tab-container">
+                                <div class="row" >
+                                    <div class="col-lg-6 col-md-6 col-sm-6" >
+                                        <div class="card" style="width: 18rem; height: 18rem; margin:auto; top:10%;" >
+                                            <div class="card-body" style="text-align: center;">
+                                                <i class="fa fa-store-alt text-danger" style="font-size: 80px; margin-bottom: 20px;"></i>
+                                              <h5 class="card-title">Register as a vendor</h5>
+                                              <p class="card-text">Sell your products at our marketplace and reach more customers.</p>
+                                              <a href="{%url 'registerVendor'%}" class="btn bgcolor" style="color: white;">Vendor Registration</a>
+                                            </div>
+                                        </div>                                                                              
+                                    </div>
+                                    <div class="col-lg-6 col-md-6 col-sm-6" >
+                                        <div class="card" style="width: 18rem; height: 18rem; margin:auto; top:10%;" >
+                                            <div class="card-body" style="text-align: center;">
+                                                <i class="fa fa-truck text-danger" style="font-size: 80px; margin-bottom: 20px;"></i>
+                                            <h5 class="card-title">Register as a shipper</h5>
+                                            <p class="card-text">Fulfill more shipments and grow your business.</p>
+                                            <a href="{%url 'registerShipper'%}" class="btn bgcolor" style="color: white;">Shipper Registration</a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                
+                               
+                            </ul>
+                        
+                    </div>
+                </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Main Section End -->
+{%endblock%}

@@ -1,4 +1,5 @@
 from accounts.models import UserProfile
+from shipper.models import Shipper
 from vendor.models import Vendor
 from django.conf import settings
 
@@ -16,6 +17,13 @@ def get_user_profile(request):
     except:
         user_profile = None
     return dict(user_profile=user_profile)
+
+def get_shipper(request):
+    try:
+        shipper = Shipper.objects.get(user=request.user)
+    except:
+        shipper = None
+    return dict(shipper=shipper)
 
 
 def get_google_api(request):
