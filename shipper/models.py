@@ -2,6 +2,9 @@ from django.db import models
 from accounts.models import User, UserProfile
 from accounts.utils import send_notification
 
+
+
+
 class Shipper(models.Model):
     user = models.OneToOneField(User, related_name='s_user', on_delete=models.CASCADE)
     user_profile = models.OneToOneField(UserProfile, related_name='s_userprofile', on_delete=models.CASCADE)
@@ -47,3 +50,4 @@ class Shipper(models.Model):
 
         #super allows us to access the save function of the shipper class
         return super(Shipper,self).save(*args,*kwargs)
+

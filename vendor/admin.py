@@ -6,4 +6,7 @@ class VendorAdmin(admin.ModelAdmin):
     list_display_links = ('user', 'vendor_name')
     list_editable = ('is_approved',) # make is_approved field be editable from the table
 
+
+
 admin.site.register(Vendor, VendorAdmin)
+

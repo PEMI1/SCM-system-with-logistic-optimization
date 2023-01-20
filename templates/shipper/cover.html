@@ -1,6 +1,6 @@
 {%load static%}
 
-<div class="page-section restaurant-detail-image-section" style="  background: url({% if shipper.user_profile.cover_photo %} {{shipper.user_profile.cover_photo.url}} {%else%} {%static 'images/default-cover.PNG'%} {%endif%}) no-repeat scroll 0 0 / cover;">
+<div class="page-section restaurant-detail-image-section" style="  background: url({% if shipper.user_profile.cover_photo %} {{shipper.user_profile.cover_photo.url}} {%else%} {%static 'images/default-cover1.PNG'%} {%endif%}) no-repeat scroll 0 0 / cover;">
     <!-- Container Start -->
     <div class="container">
         <!-- Row Start -->
@@ -14,7 +14,7 @@
                                 {%if shipper.user_profile.profile_picture%}
                                 <img src="{{shipper.user_profile.profile_picture.url}}" alt="">
                                 {%else%}
-                                <img src ="{% static 'images/default-profile.png'%}" alt="">
+                                <img src ="{% static 'images/default-profile1.png'%}" alt="">
                                 {%endif%}
                             </figure>
                         </div>

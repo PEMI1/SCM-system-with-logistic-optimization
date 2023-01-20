@@ -1,6 +1,8 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 
+from orders.models import Order, ShipOrder, OrderedProduct
+
 from .forms import ShipperForm
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
@@ -43,3 +45,32 @@ def sprofile(request):
         'shipper':shipper,
     }
     return render(request, 'shipper/sprofile.html', context)
+
+
+def order_detail(request, order_number):
+    try:
+        order = Order.objects.get(order_number=order_number, is_ordered=True)
+        shipper = Shipper.objects.get(user=request.user)
+        ship_order = ShipOrder.objects.get(order=order, shipper=shipper)
+        ordered_product = OrderedProduct.objects.filter(order=order, product__vendor=ship_order.vendor) #get the ordered product whose order number is the order no. passed via url from vendorDashboard.html and also the vendor of the ordered product is current logged in vendor
+        context={
+            'order':order,
+            'ordered_product':ordered_product,
+            'subtotal':0,
+            'grand_total':0,
+
+        }
+        
+        return render(request, 'shipper/order_detail.html',context)
+    except:
+        return redirect('shipper')
+
+
+def my_orders(request):
+    shipper = Shipper.objects.get(user=request.user)  #get current shipper 
+    #Since vendors field in Order model is manytomany type, get only get those orders where order.vendors.id = current vendor id.   
+    orders = Order.objects.filter(shippers__in=[shipper.id], is_ordered=True).order_by('-created_at')  
+    context={
+        'orders':orders,
+    }
+    return render(request, 'shipper/my_orders.html',context)

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,7 +46,8 @@ INSTALLED_APPS = [
     'marketplace',
     'customers',
     'orders',
-    'shipper'
+    'shipper',
+    'leaflet_storage',
 ]
 
 #middlewares are wrapper functions called globally to perform action before or after view
@@ -58,6 +60,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    'orders.request_object.RequestObjectMiddleware', #custom middleware created to access request in orders models.py
 
     'marketplace.middleware.AjaxMiddleware',
 ]
@@ -191,3 +195,8 @@ GOOGLE_API_KEY=config('GOOGLE_API_KEY')
 PAYPAL_CLIENT_ID= config('PAYPAL_CLIENT_ID')
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+
+
+os.environ['PATH'] = os.path.join(BASE_DIR, 'venv\Lib\site-packages\osgeo') + ';' + os.environ['PATH']
+os.environ['PROJ_LIB'] = os.path.join(BASE_DIR, 'venv\Lib\site-packages\osgeo\data\proj') + ';' + os.environ['PATH']
+GDAL_LIBRARY_PATH = os.path.join(BASE_DIR, 'venv\Lib\site-packages\osgeo\gdal304.dll')

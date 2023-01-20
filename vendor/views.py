@@ -1,5 +1,9 @@
+from django.http import HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
+
+from orders.models import Order, OrderedProduct, ShipOrder
+from orders.utils import generate_shipping_number
 
 from .forms import VendorForm
 from accounts.forms import UserProfileForm
@@ -13,6 +17,8 @@ from menu.forms import CategoryForm, ProductForm
 from django.template.defaultfilters import slugify
 
 from .utils import  get_vendor
+
+from shipper.models import Shipper
 
 @login_required(login_url='login')
 @user_passes_test(check_role_vendor) 
@@ -194,3 +200,72 @@ def delete_product(request,pk=None):
     product.delete()
     messages.success(request, "Product has been deleted successfully!")
     return redirect('products_by_category', product.category.id)
+
+
+def order_detail(request, order_number):
+    try:
+        order = Order.objects.get(order_number=order_number, is_ordered=True)
+        ordered_product = OrderedProduct.objects.filter(order=order, product__vendor=get_vendor(request)) #get the ordered product whose order number is the order no. passed via url from vendorDashboard.html and also the vendor of the ordered product is current logged in vendor
+        context={
+            'order':order,
+            'ordered_product':ordered_product,
+            'subtotal':order.get_total_by_vendor()['subtotal'],
+            'grand_total':order.get_total_by_vendor()['grand_total'],
+
+        }
+    except:
+        return redirect('vendor')
+    return render(request, 'vendor/order_detail.html',context)
+
+
+def my_orders(request):
+    vendor = Vendor.objects.get(user=request.user)  #get current vendor 
+    #Since vendors field in Order model is manytomany type, get only get those orders where order.vendors.id = current vendor id.   
+    orders = Order.objects.filter(vendors__in=[vendor.id], is_ordered=True).order_by('-created_at')  
+    context={
+        'orders':orders,
+    }
+    return render(request, 'vendor/my_orders.html',context)
+
+def assign_shipper(request, order_number):
+    shippers = Shipper.objects.filter(is_approved=True, user__is_active=True)  
+    shipper_count = shippers.count()
+   
+    context={
+        'shippers':shippers,
+        'shipper_count':shipper_count,
+        'order_number':order_number,
+       
+    }
+    return render(request, 'vendor/assign_shipper.html', context)
+
+#we are getting the request and shipper_id from assign_shipper.html when user clicks select. This is controlled by custom.js
+def confirm_shipper(request,  shipper_id, order_number):
+   #check if request is ajax
+    if request.headers.get('x-requested-with')=='XMLHttpRequest' and request.method == 'POST': #ajax request type is POST
+
+        vendor = Vendor.objects.get(user=request.user)  #get current vendor 
+        order =Order.objects.get(order_number=order_number, vendors= vendor)
+        shipper=Shipper.objects.get(id=shipper_id)
+        
+
+
+        #update order model
+        order.shippers.add(shipper)          
+        order.save()      
+         
+
+        #create ShipOrder
+        ship_order = ShipOrder(
+               order = order,
+               vendor = vendor,
+               shipper = shipper,
+                        
+        )
+        ship_order.save()
+        ship_order.shipping_number = generate_shipping_number(ship_order.id)
+        ship_order.save()
+
+        return HttpResponse('Shipper added') 
+
+    return HttpResponse('confirm_shipper view')

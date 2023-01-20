@@ -26,7 +26,7 @@ from django.core.exceptions import PermissionDenied
 from .utils import send_verification_email 
 #from .utils import send_password_reset_email
 
-from orders.models import Order
+from orders.models import Order, ShipOrder
 
 # Restrict the vendor from accessing the customer page
 def check_role_vendor(user):
@@ -290,14 +290,43 @@ def custDashboard(request):
 @login_required(login_url='login')
 @user_passes_test(check_role_vendor) 
 def vendorDashboard(request):
-    
-    return render(request, 'accounts/vendorDashboard.html')
+    vendor = Vendor.objects.get(user=request.user)  #get current vendor 
+    #Since vendors field in Order model is manytomany type, get only  those orders where order.vendors.id = current vendor id.   
+    orders = Order.objects.filter(vendors__in=[vendor.id], is_ordered=True).order_by('-created_at')  
+    print(orders)
+    recent_orders = orders[:5]
+
+    shiporders = ShipOrder.objects.filter(vendor=vendor)
+    print(shiporders)
+
+    context={
+        'orders':orders,
+        'orders_count':orders.count(),
+        'recent_orders':recent_orders,
+        'shiporders':shiporders,
+    }
+    return render(request, 'accounts/vendorDashboard.html',context)
 
 @login_required(login_url='login')
 @user_passes_test(check_role_shipper) 
 def shipperDashboard(request):
+    shipper = Shipper.objects.get(user=request.user)  #get current shipper 
+    #Since shippers field in Order model is manytomany type, get only  those orders where order.shippers.id = current shipper id.   
+    orders = Order.objects.filter(shippers__in=[shipper.id], is_ordered=True).order_by('-created_at')  
+    print(orders)
+    recent_orders = orders[:5]
+
+    shiporders = ShipOrder.objects.filter(shipper=shipper).order_by('-created_at')
+    print(shiporders)
+
+    context={
+        'orders':orders,
+        'orders_count':orders.count(),
+        'recent_orders':recent_orders,
+        'shiporders':shiporders,
+    }
     
-    return render(request, 'accounts/shipperDashboard.html')
+    return render(request, 'accounts/shipperDashboard.html',context)
 
 
 

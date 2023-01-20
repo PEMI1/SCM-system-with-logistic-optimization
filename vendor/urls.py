@@ -19,4 +19,11 @@ urlpatterns = [
   path('menu-builder/product/edit/<int:pk>/', views.edit_product, name ='edit_product'),
   path('menu-builder/product/delete/<int:pk>/', views.delete_product, name ='delete_product'),
 
+
+  path('order_detail/<str:order_number>/',views.order_detail,name='vendor_order_detail'),
+  path('my_orders/', views.my_orders, name='vendor_my_orders'),
+
+  #SHIPPING
+  path('assign_shipper/<str:order_number>/', views.assign_shipper, name='assign_shipper'),
+  path('confirm_shipper/<int:shipper_id>/<str:order_number>', views.confirm_shipper, name='confirm_shipper'),
 ]

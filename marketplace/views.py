@@ -53,7 +53,7 @@ def vendor_detail(request, vendor_slug):
 
 
 
-#we are getting the request and product_id from vendor_detail.html when user clicks add_to_cart
+#we are getting the request and product_id from vendor_detail.html when user clicks add_to_cart. This is controlled by custom.js
 def add_to_cart(request, product_id):
     # user must login to access cart
     if request.user.is_authenticated:

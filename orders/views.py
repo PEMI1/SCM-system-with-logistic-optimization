@@ -1,6 +1,8 @@
+import simplejson as json
 from django.shortcuts import redirect, render
 from marketplace.models import Cart
 from marketplace.context_processors import get_cart_amounts
+from menu.models import Product
 from .forms import OrderForm
 from .models import Order, OrderedProduct, Payment
 
@@ -19,7 +21,39 @@ def place_order(request):
      cart_count = cart_items.count()
      if cart_count <= 0:
           return redirect('marketplace')
-    
+
+     #render vendor recent orders at vendordashboard using vendor's id. This ids are passed to order model to get the vendors associated with an order
+     vendors_ids = []
+     for i in cart_items:
+          if i.product.vendor.id not in vendors_ids: #get id once for each vendor 
+               vendors_ids.append(i.product.vendor.id)    
+     print(vendors_ids)
+
+     #orders.views.place_order(order.total_data)->vendorDashboard.html(order.get_total_by_vendor)->orders.models.get_total_by_vendor
+     #get subtotal of each vendor for each order. Make json format that stores :
+     #{'vendor_id':'subtotal'}
+     #loop through cart items and calculate subtotal for unique vendor id in vendors_ids
+     subtotal=0
+     k={} #dictionary that stores key(v_id):value(subtotal) pair
+     total_data ={}
+     for i in cart_items:
+          product= Product.objects.get(pk=i.product.id, vendor_id__in=vendors_ids)  #bring product whose pk=current item's id and vendor is in vendors_ids list
+          print(product, product.vendor.id)
+          v_id = product.vendor.id
+          if v_id in k:
+               subtotal = k[v_id]  #old subtotal
+               subtotal += (product.price * i.quantity)
+               k[v_id] = subtotal #new subtotal
+          else:
+               subtotal = (product.price * i.quantity)  #first loop when v_id is not in the k list
+               k[v_id] = subtotal  #we cannot append dictionary. Value of key[v_id] is subtotal
+          #constract total_data which is passed to total_data field in order model
+          total_data.update({product.vendor.id:subtotal})  #json format
+
+     print(k)
+     print(total_data)
+
+
      subtotal = get_cart_amounts(request)['subtotal']
      grand_total = get_cart_amounts(request)['grand_total']
 
@@ -39,10 +73,12 @@ def place_order(request):
 
                order.user = request.user
                order.total = grand_total
+               order.total_data = json.dumps(total_data)
                order.payment_method = request.POST['payment_method']
 
                order.save()  #pk/order.id is only created after saving the order
                order.order_number = generate_order_number(order.id)
+               order.vendors.add(*vendors_ids)  # '*' adds vendor ids recurcively in order_vendor table to hold manyTomany relation
                order.save() 
 
                context={
@@ -128,7 +164,7 @@ def payments(request):
           send_notification(mail_subject, mail_template, context)
 
           #clear cart if payment is success
-          #cart_items.delete()
+          cart_items.delete()
 
           #return back to ajax with status SUCCESS or FAILURE/ Show order confirmation page after order success
           response = {

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Payment, Order, OrderedProduct
+from .models import Payment, Order, OrderedProduct, ShipOrder
 
 
 class OrderedProductInline(admin.TabularInline):
@@ -9,10 +9,15 @@ class OrderedProductInline(admin.TabularInline):
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'name', 'phone', 'email', 'total', 'payment_method','status','is_ordered']
+    list_display = ['order_number', 'name', 'phone', 'email', 'total', 'payment_method','status','order_placed_to','shippers_assigned','is_ordered']
     inlines=[OrderedProductInline]
+
+class ShipOrderAdmin(admin.ModelAdmin):
+    list_display= ('shipping_number','order', 'vendor', 'shipper', 'created_at')
+#     list_display_links = ('order', 'vendor', 'shipper')
 
 
 admin.site.register(Payment)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderedProduct)
+admin.site.register(ShipOrder, ShipOrderAdmin)
