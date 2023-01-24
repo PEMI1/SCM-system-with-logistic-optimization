@@ -3,7 +3,7 @@
 <div class="wrapper">
     <!-- Header Start -->
     <header id="header">
-        <div class="main-header">
+        <div class="main-header" style="position: fixed; width: 100%;">
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
@@ -30,15 +30,16 @@
                     <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
                         <div class="login-option">
                             <!--CART-->
-                            {%if user.is_authenticated %}
+                            {%if user.is_authenticated and user.get_role == "Customer" %}
                             <a href="{%url 'cart' %}">
                                 <i class="fa fa-shopping-cart text-danger" style="font-size: 20px;"></i>
                                 <span class="badge badge-warning" id="cart_counter" style="border-radius:50px; position:relative; bottom:10px; left: -5px;">{{cart_count}}</span>
                             </a>
-                            {%endif%}
-
                             <!--MARKETPLACE-->
                             <a href="{%url 'marketplace'%}" class="btn btn-outline-danger text-uppercase font-weight-bold">marketplace</a>
+                           
+                            {%endif%}
+
                             {%if user.is_authenticated %}
                                 {% comment %}if user is logged in show only logout {% endcomment %}
                                 <a class="cs-color cs-popup-joinus-btn login-popup" href="{%url 'myAccount'%}">My Account </a>

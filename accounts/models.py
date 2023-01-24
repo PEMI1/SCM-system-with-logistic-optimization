@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
+from django.contrib.gis.db import models
+from django.contrib.gis.geos import Point
+
 
 #base user manager allows you to edit the way user and superuser is created
 #by default to create super user only email, username, and password are asked but now it will also ask for first and last name
@@ -100,8 +103,11 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='users/profile_pictures', blank=True, null=True)
     cover_photo= models.ImageField(upload_to='users/cover_photos', blank=True, null=True)
+
     address = models.CharField(max_length=250, blank=True, null=True)
-    #address_line_2 = models.CharField(max_length=50, blank=True, null=True)
+    location = models.PointField(geography=True, srid=4326)
+    objects = models.Manager()
+
     country = models.CharField(max_length=15, blank=True, null=True)
     state = models.CharField(max_length=15, blank=True, null=True)
     city = models.CharField(max_length=15, blank=True, null=True)
@@ -116,4 +122,33 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.email
+
+
+#table to store geospatial info of nepal
+class LocalAddress(models.Model):
+    province = models.IntegerField()
+    district = models.CharField(max_length=50)
+    unit_type = models.CharField(max_length=50)
+    unit_name = models.CharField(max_length=50)
+    district_c = models.IntegerField()
+    shape_leng = models.FloatField()
+    shape_area = models.FloatField()
+    geom = models.MultiPolygonField(srid=4326)
+
+    def __str__(self):
+        return self.district
+
+    class Meta:
+        verbose_name_plural = "Local addresses"
+
+
+class Counties(models.Model):
+    counties = models.CharField(max_length=25)
+    codes = models.IntegerField()
+    cty_code = models.CharField(max_length=24)
+    dis = models.IntegerField(null=True)
+    geom = models.MultiPolygonField(srid=4326)
+
+    def __str__(self):
+        return self.counties
 

@@ -2,6 +2,7 @@ from django import forms
 
 from .models import Vendor 
 from accounts.validators import allow_only_images_validator
+from orders.models import ShipOrder
 
 
 
@@ -12,4 +13,7 @@ class VendorForm(forms.ModelForm):
         model= Vendor
         fields = ['vendor_name', 'vendor_license']
 
-        
+class PackageVolumeForm(forms.Form):
+    volume = forms.FloatField()
+
+   

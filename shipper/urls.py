@@ -9,6 +9,6 @@ urlpatterns = [
   path('order_detail/<str:order_number>/',views.order_detail,name='shipper_order_detail'),
   path('my_orders/', views.my_orders, name='shipper_my_orders'),
 
- 
+  path('optimize_container/', views.optimize_container, name='optimize_container'),
 
 ]

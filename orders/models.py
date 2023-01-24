@@ -123,6 +123,8 @@ class ShipOrder(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     shipper = models.ForeignKey(Shipper, on_delete=models.CASCADE)
     shiporder_status = models.CharField(max_length=50, choices=STATUS, default='New')
+    package_volume = models.FloatField( blank=True, default='0.00')
+
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

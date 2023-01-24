@@ -24,36 +24,24 @@
                                         <div class="col-md-12">
                                             <div class="bg-white p-1">
                                                 <img src="{%static 'logo/logoscm1.png'%}" alt="scm logo" width="300">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <h4 class="mt-2 mb-3">Thank  you for your order.</h4>
-                                                    </div>
-                                                    <div class="col-md-6 text-right">
-                                                        <p class="mb-0"><strong>CUSTOMER INFO:</strong></p>
-
-                                                        <p class="mb-0">{{order.name}}</p>
-                                                        <p class="mb-0">{{order.adress}}</p>
-                                                        <p class="mb-0">{{order.phone}}</p>
-                                                        <p class="mb-0">{{order.email}}</p>
-                                
-                                                    </div>
+                                                <div class="mt-3">
+                                                <h6>Hello {{user.username}}, </h6><span>Review the order details below.</span>
                                                 </div>
-                                                <h6>Hello {{user.username}}, </h6><span>Review your order details below.</span>
                                                 <hr>
                                 
                                 
                                                 <div class="d-flex justify-content-between">
                                                     <div>
-                                                        <span class=" d-block">Order Date: </span><span class="font-weight-bold">{{order.created_at}}</span>
+                                                        <span class=" d-block">Order Date: </span><span class="font-weight-bold">{{ship_order.created_at}}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class=" d-block">Shipping Number: </span><span class="font-weight-bold">{{ship_order.shipping_number}}</span>
                                                     </div>
                                                     <div>
                                                         <span class=" d-block">Order Number: </span><span class="font-weight-bold">{{order.order_number}}</span>
                                                     </div>
                                                     <div>
-                                                        <span class=" d-block">Payment Method: </span><span class="font-weight-bold">{{order.payment_method}}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span class=" d-block">Transaction TD: </span><span class="font-weight-bold">{{order.payment.transaction_id}}</span>
+                                                        <span class=" d-block">Package Volume: </span><span class="font-weight-bold">{{ship_order.package_volume}}</span> cubic meter
                                                     </div>
                                                 </div> 
                                                 <hr>
@@ -73,10 +61,27 @@
                                                         {%endfor%}
                                                     </tbody>
                                                 </table>
+                                                <hr>
                                 
                                                 <div class="row mt-5">
-                                                    
-                                                    <div class="col-md-6">
+                                                                                       
+                                                    <div class="col-md-6 text-left">
+                                                                <p class="mb-0"><strong>Delivery Details:</strong></p>
+                                                                <br>
+                                                                <p class="mb-0"><b>Customer name: </b>{{order.name}}</p>
+                                                                <p class="mb-0"><b>Address: </b>{{order.address}}</p>
+                                                                <p class="mb-0"><b>City: </b>{{order.city}}</p>
+                                                                <p class="mb-0"><b>Pincode: </b>{{order.pin_code}}</p>
+                                                                <p class="mb-0"><b>State: </b>{{order.state}}</p>
+                                                                <p class="mb-0"><b>Country: </b>{{order.country}}</p>
+                                                                <p class="mb-0"><b>Phone: </b>{{order.phone}}</p>
+                                                                <p class="mb-0"><b>Email: </b>{{order.email}}</p>
+                                                                                                       
+                                                    </div>
+                                                        
+                                                    <div class="d-flex justify-content-center col-md-6">
+                                                        
+
                                                         <ul>
                                                             <li style="list-style-type:none;">
                                                                 Subtotal
@@ -101,9 +106,6 @@
                                                             </li>
                                                   
                                                         </ul>
-                                                    </div>
-                                                    <div class="d-flex justify-content-center col-md-6">
-                                                        <img src="{% static 'images/paid.png' %}" width="200">
                                                     </div>
                                                 </div>
                                                 <hr>

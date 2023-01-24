@@ -3,6 +3,8 @@ from .models import User, UserProfile
 
 from .validators import allow_only_images_validator
 
+from djgeojson.fields import PointField
+
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
     confirm_password = forms.CharField(widget=forms.PasswordInput())
@@ -25,7 +27,8 @@ class UserForm(forms.ModelForm):
 
 
 class UserProfileForm(forms.ModelForm):
-    address = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Start typing.....', 'required': 'required'}))
+    #address = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Start typing.....', 'required': 'required'}))
+    address = forms.CharField(widget=forms.TextInput(attrs={'class': 'address-field', 'placeholder': 'Enter address'}))
     profile_picture = forms.FileField(widget=forms.FileInput(attrs={'class':'btn btn-info'}), validators=[allow_only_images_validator])
     cover_photo = forms.FileField(widget=forms.FileInput(attrs={'class':'btn btn-info'}), validators=[allow_only_images_validator])
 
@@ -36,7 +39,7 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         #fields = ['profile_picture','cover_photo','address_line_1','address_line_2','country','state','city','pin_code','latitude','longitude']
-        fields = ['profile_picture','cover_photo','address','country','state','city','pin_code','latitude','longitude']
+        fields = ['profile_picture','cover_photo','address','location','country','state','city','pin_code','latitude','longitude']
 
 
     #method 2

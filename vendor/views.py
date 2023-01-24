@@ -1,11 +1,11 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 
 from orders.models import Order, OrderedProduct, ShipOrder
 from orders.utils import generate_shipping_number
 
-from .forms import VendorForm
+from .forms import VendorForm, PackageVolumeForm
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
 from .models import Vendor
@@ -19,6 +19,10 @@ from django.template.defaultfilters import slugify
 from .utils import  get_vendor
 
 from shipper.models import Shipper
+from django.urls import reverse
+from decimal import Decimal
+
+from django.contrib.gis.geos import Point
 
 @login_required(login_url='login')
 @user_passes_test(check_role_vendor) 
@@ -33,6 +37,12 @@ def vprofile(request):
         profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
         vendor_form = VendorForm(request.POST, request.FILES, instance=vendor)
         if profile_form.is_valid() and vendor_form.is_valid():
+            # address = profile_form.cleaned_data['address']
+            # print(address)
+            # # Use geos to query the OSM data and get the location
+            # point = Point(x, y)
+            # profile_form.location = point
+
             profile_form.save()
             vendor_form.save()
             messages.success(request, 'Settings Updated ')
@@ -239,33 +249,87 @@ def assign_shipper(request, order_number):
     }
     return render(request, 'vendor/assign_shipper.html', context)
 
+
+@login_required(login_url='login')
+def load_package_volume(request, shipper_id, order_number):
+    shipper=Shipper.objects.get(id=shipper_id)
+    if request.method =='POST':
+        form = PackageVolumeForm(request.POST)
+        if form.is_valid():
+            # Store the volume in a temporary variable
+            volume = form.cleaned_data['volume']
+            request.session['volume'] = volume
+            url = reverse('confirm_shipper', kwargs={'shipper_id': shipper_id, 'order_number': order_number, 'volume':volume})
+            return redirect(url)
+
+        else:
+            print(form.errors)
+    else:
+        form = PackageVolumeForm()
+    context= {
+        'form': form,
+        'shipper':shipper,
+        'order_number':order_number,
+
+    }
+
+    return render(request, 'vendor/load_package_volume.html', context)
+
+
 #we are getting the request and shipper_id from assign_shipper.html when user clicks select. This is controlled by custom.js
-def confirm_shipper(request,  shipper_id, order_number):
-   #check if request is ajax
-    if request.headers.get('x-requested-with')=='XMLHttpRequest' and request.method == 'POST': #ajax request type is POST
-
-        vendor = Vendor.objects.get(user=request.user)  #get current vendor 
-        order =Order.objects.get(order_number=order_number, vendors= vendor)
-        shipper=Shipper.objects.get(id=shipper_id)
+def confirm_shipper(request,  shipper_id, order_number, volume):
+    vendor = Vendor.objects.get(user=request.user)  #get current vendor 
+    order =Order.objects.get(order_number=order_number, vendors= vendor)
+    shipper=Shipper.objects.get(id=shipper_id)
+    # volume = request.session.pop('volume', None)
+    volume = float(volume)
+    print(volume)
+   
+    if  request.headers.get('x-requested-with')=='XMLHttpRequest' and request.method == 'POST': 
+        # Retrieve the volume from the temporary variable
         
+        # return HttpResponse(volume)  
+        if volume:
+            # Create the ShipOrder model and assign the volume          
+            #update order model         
+            order.shippers.add(shipper)          
+            order.save()      
+            
+
+            #create ShipOrder
+            ship_order = ShipOrder(
+                order = order,
+                vendor = vendor,
+                shipper = shipper,
+                package_volume = volume,
+                            
+            )
+            ship_order.save()
+            ship_order.shipping_number = generate_shipping_number(ship_order.id)
+            ship_order.save()
+
+            # return HttpResponse('Shipper added') 
+            print('shipper added')
+            return JsonResponse({'status':'Success', 'message':'Shipper Assigned Successfully!'}) 
+           
+           
+        else:
+            return redirect('load_package_volume')   
+
+    else:
+        context={
+            'order': order,
+            'order_number':order_number,
+            'vendor': vendor,
+            'shipper_id':shipper_id,
+            'volume':volume,
+            
+        }
+        
+        return render(request, 'vendor/confirm_shipper.html', context)
 
 
-        #update order model
-        order.shippers.add(shipper)          
-        order.save()      
-         
+   
 
-        #create ShipOrder
-        ship_order = ShipOrder(
-               order = order,
-               vendor = vendor,
-               shipper = shipper,
-                        
-        )
-        ship_order.save()
-        ship_order.shipping_number = generate_shipping_number(ship_order.id)
-        ship_order.save()
 
-        return HttpResponse('Shipper added') 
-
-    return HttpResponse('confirm_shipper view')
+    

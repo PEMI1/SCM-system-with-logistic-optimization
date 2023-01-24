@@ -29,6 +29,9 @@ urlpatterns = [
     path('customer/', include('customers.urls')),
     path('shipper/', include('shipper.urls')),
 
+    path('localAddress_data/', views.localAddress_data, name= 'localAddress_data'),
+    path('counties_data/', views.counties_data, name= 'counties_data'),
+
 
 ]
 

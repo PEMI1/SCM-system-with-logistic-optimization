@@ -1,7 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
+{%load leaflet_tags%}
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,8 +10,7 @@
 	<!-- Google Font Family Link Start -->
 	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat:400,700">
 	<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700,800">
-	<!-- Google Font Family Link End -->
-
+	
 	<!-- CSS -->
 	<link href="{% static 'css/iconmoon.css' %}" rel="stylesheet">
 	<link href="{% static 'css/style.css' %}" rel="stylesheet">
@@ -26,16 +25,34 @@
 	
 	<!-- JAVASCRIPT -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 	<script src="{% static 'js/modernizr.js '%}"></script>
 	<script src="{% static 'js/bootstrap.js' %}"></script>
+	
 	<!--sweetalert cdn-->
 	<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+	
 	<!--google api script-->
-	<script src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_API_KEY}}&libraries=places&callback=initAutoComplete" async defer></script>
-	<script src ="{%static 'js/custom.js' %}"></script>
+	{% comment %} <script src="https://maps.googleapis.com/maps/api/js?key={{GOOGLE_API_KEY}}&libraries=places&callback=initAutoComplete" async defer></script> {% endcomment %}
+	
+	
+
 
 	<!-- Include the PayPal JavaScript SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id={{PAYPAL_CLIENT_ID}}&currency=USD"></script>
+
+	<!--leaflet-->
+	{%leaflet_js%}
+	{%leaflet_css%}
+	{% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/leaflet.search/latest/leaflet-search.min.css" />
+	<script src="https://cdn.jsdelivr.net/leaflet.search/latest/leaflet-search.min.js"></script> {% endcomment %}
+	<script src ="{%static 'dist/leaflet.ajax.js' %}"></script>
+
+	<script src ="{%static 'js/custom.js' %}"></script>
+
+	
+
 
 
 	<style>
@@ -43,6 +60,7 @@
 			font:Normal  14px/24px "Open Sans", sans-serif;letter-spacing: 0px;text-transform: none;color: #515151 !important;
 		}
 	</style>
+	
 </head>
 
 <body>

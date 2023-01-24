@@ -12,4 +12,8 @@ class ShipperForm(forms.ModelForm):
         model= Shipper
         fields = ['shipper_name', 'shipper_license']
 
+class ContainerOptimizationForm(forms.Form):
+    container_volume = forms.FloatField()
+
+
         

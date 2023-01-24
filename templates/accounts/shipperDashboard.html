@@ -68,9 +68,9 @@
                                                       <tr>
                                                         <th scope="col">Shipping #</th>
                                                         <th scope="col">Order #</th>
-                                                        <th scope="col">Customer Name</th>      
-                                                        <th scope="col">Vendor Name</th>                                  
-                                                        <th scope="col">Total</th>
+                                                        <th scope="col">Customer</th>      
+                                                        <th scope="col">Vendor</th>                                  
+                                                        {% comment %} <th scope="col">Total</th> {% endcomment %}
                                                         <th scope="col">Status</th>
                                                         <th scope="col">Date</th>
                                                         <th scope="col">Action</th>
@@ -83,7 +83,7 @@
                                                         <td>{{shiporder.order.order_number}}</td>
                                                         <td>{{shiporder.order.name}}</td>  
                                                         <td>{{shiporder.vendor}}</td>                                                      
-                                                        <td>${{shiporder.order.get_total_by_vendor.grand_total}}</td>
+                                                        {% comment %} <td>${{shiporder.order.get_total_by_vendor.grand_total}}</td> {% endcomment %}
                                                         <td>{{shiporder.shiporder_status}}</td>
                                                         <td>{{shiporder.created_at}}</td>
                                                         <td><a href="{%url 'shipper_order_detail' shiporder.order.order_number%}" style="color:unset;"><i class="fa fa-info-circle"></i></a></td>

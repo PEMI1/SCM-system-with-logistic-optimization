@@ -47,7 +47,9 @@ INSTALLED_APPS = [
     'customers',
     'orders',
     'shipper',
-    'leaflet_storage',
+    'djgeojson',
+    'django.contrib.gis',
+    'leaflet',
 ]
 
 #middlewares are wrapper functions called globally to perform action before or after view
@@ -106,11 +108,12 @@ WSGI_APPLICATION = 'foodonline_main.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        # 'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
-        'POST': config('DB_HOST'),
+        'HOST': config('DB_HOST'),
     }
 }
 
@@ -188,15 +191,26 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'SCM Marketplace <scm@gmail.com>'
 
 
-
+#google cloud services api for google maps
 GOOGLE_API_KEY=config('GOOGLE_API_KEY')
 
 
+#Paypal 
 PAYPAL_CLIENT_ID= config('PAYPAL_CLIENT_ID')
-
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 
-
+#gdal configurations
 os.environ['PATH'] = os.path.join(BASE_DIR, 'venv\Lib\site-packages\osgeo') + ';' + os.environ['PATH']
 os.environ['PROJ_LIB'] = os.path.join(BASE_DIR, 'venv\Lib\site-packages\osgeo\data\proj') + ';' + os.environ['PATH']
 GDAL_LIBRARY_PATH = os.path.join(BASE_DIR, 'venv\Lib\site-packages\osgeo\gdal304.dll')
+
+
+#leaflet configurations
+LEAFLET_CONFIG={
+    'DEFAULT_CENTER': (27.71, 85.32),
+    'DEFAULT_ZOOM': 5,
+    'MAX_ZOOM': 20,
+    'MIN_ZOOM': 3,
+    'SCALE' : 'both',
+    'ATTRIBUTION_PREFIX': 'Inspired by SCM'
+}

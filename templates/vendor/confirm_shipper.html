@@ -1,0 +1,135 @@
+{% extends 'base.html'%}
+
+{%block content%}
+<!-- Main Section Start -->
+<div class="main-section pt-5">
+    <div class="page-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div class="tabs-holder horizontal">
+                        <ul class="stickynav-tabs nav nav-tabs">
+                            <li class="active"><a data-toggle="tab" href="#home">Review Pickup Location</a></li>
+                            
+                        </ul>
+                        <div class="tab-content">
+                            <div id="home" class="tab-pane in active">
+                                <div class="menu-itam-holder">
+                                    
+
+                                    <div id="menu-item-list-6272" class="menu-itam-list">
+                                       <div class="biling-adress">
+                                            
+                                            <div ><b>{{vendor.vendor_name}}</b></div>
+                                            <div ><b>{{vendor.user_profile.address}}</b></div>
+                                            <div ><b>{{vendor.user_profile.city}} - {{vendor.user_profile.pin_code}} </b></div>
+                                            <div ><b>{{vendor.user_profile.state}}, {{vendor.user_profile.country}}</b></div>
+                                            <div><b> Package Volume = {{volume}} cubic meter</b></div>
+                                            <br>
+                                           
+                                           
+                                            {% comment %} <div><a href="{% url 'checkout'%}" class="btn btn-outline-danger " style="margin-bottom: 20px;">Edit</a></div> {% endcomment %}
+
+                                      </div>
+                                    </div>
+                                </div>    
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+
+                <!--your order section-->
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                    <div class="tabs-holder horizontal">
+                        <ul class="stickynav-tabs nav nav-tabs">
+                            <li class="active"><a data-toggle="tab" href="#home">Review Delivery Location</a></li>
+                            
+                        </ul>
+                        <div class="tab-content">
+                            <div id="home" class="tab-pane in active">
+                                <div class="menu-itam-holder">
+                                    
+
+                                    <div id="menu-item-list-6272" class="menu-itam-list">
+                                       <div class="biling-adress">
+                                            
+                                            <div ><b>Customer name: </b>{{order.name}}</div>
+                                            <div ><b>Address: </b>{{order.address}}</div>
+                                            <div ><b>City: </b>{{order.city}}  </div>
+                                            <div ><b>Pincode: </b>{{order.pin_code}}</div>
+                                            <div ><b>State: </b>{{order.state}}</div>
+                                            <div ><b>Country: </b>{{order.country}}</div>
+                                            <div><b>Phone: </b>{{order.phone}}</div>
+                                            <div><b>Email: </b>{{order.email}}</div>
+                                            <div><b>Payment: </b>{{order.payment_method}}</div>
+                                           <br>
+                                           
+                                           <a href="{%url 'confirm_shipper' shipper_id order_number volume%}" class="confirm_shipper btn btn-info"   data-id="{{shipper_id}}" data-url="{% url 'confirm_shipper' shipper_id order_number volume%}"> Confirm Shipment</a> 
+                                            <br>
+                                      </div>
+                                    </div>
+                                </div>    
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Main Section End -->
+<script>
+    $('.confirm_shipper').on('click', function(e){
+        e.preventDefault();
+        //get csrf token in js
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        console.log('csrftoken ==> ', csrftoken);
+      
+        
+        var url =  $(this).attr('data-url');
+    
+    
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {
+                'csrfmiddlewaretoken': csrftoken,
+    
+            },
+            success: function(response){
+                console.log('response==>', response);
+                if(response.status=='Success'){
+                    swal(response.message, '', 'info').then(function(){
+                     window.location = '/vendorDashboard';
+                    })
+                }
+                
+                // From payments view, pass transaction_id and order_number in ajax response after payment success. Then get the transaction_id and order_number from the response and load them into url of the redirected/href page(order_complete). From the url render transaction_id and order_number into order_complete.html
+                //this will be GET request
+                //window.location.href = order_complete + '?order_no='+response.order_number+'&trans_id='+response.transaction_id
+            }
+        })   
+    
+    })
+    </script> 
+
+{%endblock%}

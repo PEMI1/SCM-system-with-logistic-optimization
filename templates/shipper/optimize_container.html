@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{%load static%}
+
+{%block content%}
+
+	<!-- Main Section Start -->
+    <div class="main-section">
+       {%include 'shipper/cover.html'%}
+        <div class="page-section account-header buyer-logged-in">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+                        <!--load sidebar here-->
+                        {% include 'includes/s_sidebar.html' %}
+                    </div>
+                    <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+                        <div class="user-dashboard loader-holder">
+                            <div class="user-holder">
+                                <h5 class="text-uppercase">Load container efficiently</h5>
+                                <hr>
+                                
+                        
+
+                                <!--render form-->
+                                <form id ="optimize_container_form" action = "{% url 'optimize_container' %}" method ="POST" >
+                                    {% csrf_token %}
+                                    <div class="form-fields-set">
+                                        <div class="row">
+                                            <div class="col-lg-8 col-md-8 col-sm-8">
+                                                <div class="field-holder">
+                                                    <label>Enter container capacity in cubic meters*</label>
+                                                    {{form.container_volume}}
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-4 col-md-4 col-sm-4">
+                                                <div class="field-holder">
+                                                    <input type="submit"  style="margin-top: 30px; height: 30px;" class="btn btn-info" value="Optimize"> 
+                                                </div>
+                                            </div>                                             
+                                        </div>
+                                    </div> 
+                                  
+                                    
+                                    {% for field in form %}
+                                        {% if field.errors %}
+                                            {% for error in field.errors %}
+                                                <li style = "color:red;">{{error}}</li>
+                                            {%endfor%}
+                                        {%endif%}
+                                    {%endfor%}
+                                  
+
+                                </form> 
+
+                                <div id = "container-items" class="">
+                                        
+                                    <table class="table table-borderless">
+                                        <tbody>
+                                            {%if selected_shipOrders %}
+                                                <tr>
+                                                    <td style="line-height: 1.5;"><b>Shipping #</b></td>
+                                                    <td style="line-height: 1.5;"><b>Vendor</b></td>    
+                                                    <td style="line-height: 1.5;"><b>Package Volume</b></td>     
+
+                                                </tr>
+                                                {% for shipOrder in selected_shipOrders %}
+                                                <tr>
+                                                    <td style="line-height: 1.5;"><a href="{%url 'shipper_order_detail' shipOrder.order.order_number%}" style="color:unset;">{{shipOrder.shipping_number}}</a></td>
+                                                    <td style="line-height: 1.5;">{{shipOrder.vendor}}</td>    
+                                                    <td style="line-height: 1.5;">{{shipOrder.package_volume}} cubic meters</td>     
+
+                                                </tr>
+                                                {%endfor%}
+                                            {%endif%}
+                                        </tbody>
+                                    </table>
+                                    
+                                    
+                                    
+                                </div>
+
+
+                            </div>
+                        </div>    
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Main Section End -->
+
+{% include 'includes/alerts.html'%}
+
+{% comment %} <script>
+    $(document).ready(function(){
+        $("#optimize_container_form").submit(function(event){
+            event.preventDefault(); // prevent the form from submitting normally
+            
+            
+            // create an AJAX request to send to your Django view
+            $.ajax({
+              type: "POST",
+              url: "{% url 'optimize_container'%}",
+              data: $(this).serialize(), // send the form data
+              success: function(response) {
+                // handle the response here
+                //$("#truck-"+the_id).css("visibility", "hidden");
+                //$("#result").html(response.result);
+              }
+            });
+        });
+     
+    });
+</script> {% endcomment %}
+
+{% endblock %}

@@ -2,6 +2,8 @@ from django.urls import path, include
 from . import views
 from accounts import views as AccountsViews
 
+
+
 urlpatterns = [
   path('', AccountsViews.vendorDashboard, name ='vendor'),
   path('profile/', views.vprofile, name='vprofile'),
@@ -25,5 +27,9 @@ urlpatterns = [
 
   #SHIPPING
   path('assign_shipper/<str:order_number>/', views.assign_shipper, name='assign_shipper'),
-  path('confirm_shipper/<int:shipper_id>/<str:order_number>', views.confirm_shipper, name='confirm_shipper'),
+  path('load_package_volume/<int:shipper_id>/<str:order_number>', views.load_package_volume, name="load_package_volume"),
+  path('confirm_shipper/<int:shipper_id>/<str:order_number>/<str:volume>', views.confirm_shipper, name='confirm_shipper'),
+
 ]
+
+

@@ -13,7 +13,7 @@ class OrderAdmin(admin.ModelAdmin):
     inlines=[OrderedProductInline]
 
 class ShipOrderAdmin(admin.ModelAdmin):
-    list_display= ('shipping_number','order', 'vendor', 'shipper', 'created_at')
+    list_display= ('shipping_number','order', 'vendor', 'shipper','package_volume', 'created_at')
 #     list_display_links = ('order', 'vendor', 'shipper')
 
 

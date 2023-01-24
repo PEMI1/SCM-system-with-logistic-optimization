@@ -6,7 +6,7 @@ from shipper.models import Shipper
 from vendor.forms import VendorForm
 from vendor.models import Vendor
 from .forms import UserForm
-from .models import User, UserProfile
+from .models import LocalAddress, User, UserProfile, Counties
 
 from django.template.defaultfilters import slugify
 
@@ -27,6 +27,8 @@ from .utils import send_verification_email
 #from .utils import send_password_reset_email
 
 from orders.models import Order, ShipOrder
+
+from django.core.serializers import serialize
 
 # Restrict the vendor from accessing the customer page
 def check_role_vendor(user):
@@ -388,3 +390,14 @@ def reset_password(request):
             messages.error(request,'Password do not match.')
 
     return render(request, 'accounts/reset_password.html')
+
+
+
+def localAddress_data(request):
+    localAddresses = serialize('geojson', LocalAddress.objects.all())
+    return HttpResponse(localAddresses, content_type='json')#just return httpresponse containing serialized objects of LocalAddress in json format
+
+def counties_data(request):
+    counties = serialize('geojson', Counties.objects.all())
+    return HttpResponse(counties, content_type='json')#just return httpresponse containing serialized objects of LocalAddress in json format
+
