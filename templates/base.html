@@ -45,9 +45,17 @@
 	<!--leaflet-->
 	{%leaflet_js%}
 	{%leaflet_css%}
+	<!--markercluster-->
+	<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
 	{% comment %} <link rel="stylesheet" href="https://cdn.jsdelivr.net/leaflet.search/latest/leaflet-search.min.css" />
 	<script src="https://cdn.jsdelivr.net/leaflet.search/latest/leaflet-search.min.js"></script> {% endcomment %}
 	<script src ="{%static 'dist/leaflet.ajax.js' %}"></script>
+
+	<!--send API call to a url using JS -->
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 	<script src ="{%static 'js/custom.js' %}"></script>
 

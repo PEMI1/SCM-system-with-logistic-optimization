@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 
 from shipper.forms import ShipperForm
@@ -6,7 +6,7 @@ from shipper.models import Shipper
 from vendor.forms import VendorForm
 from vendor.models import Vendor
 from .forms import UserForm
-from .models import LocalAddress, User, UserProfile, Counties
+from .models import  Edge, Node, User, UserProfile, RoadsData, DataStatus
 
 from django.template.defaultfilters import slugify
 
@@ -28,7 +28,17 @@ from .utils import send_verification_email
 
 from orders.models import Order, ShipOrder
 
+#routing
 from django.core.serializers import serialize
+from django.contrib.gis.geos import Point
+import numpy as np
+import json
+from django.contrib.gis.geos import MultiLineString
+from shapely.geometry import LineString
+from sklearn.neighbors import KDTree
+import math
+import networkx as nx
+
 
 # Restrict the vendor from accessing the customer page
 def check_role_vendor(user):
@@ -391,13 +401,197 @@ def reset_password(request):
 
     return render(request, 'accounts/reset_password.html')
 
+def roads_data(request):
+    roads = serialize('geojson', RoadsData.objects.all())
+    return HttpResponse(roads, content_type='json')#just return httpresponse containing serialized objects of LocalAddress in json format
 
+# Create a nearest neighbor finding function using the KDTree
+def nearest_neighbor(source, destination, kdtree):
+    source = np.array([[source.x, source.y]])
+    destination = np.array([[destination.x, destination.y]])
+    distances, indices = kdtree.query(np.concatenate([source, destination]), return_distance=True, k=1)
+    return indices[0][0], indices[1][0]
 
-def localAddress_data(request):
-    localAddresses = serialize('geojson', LocalAddress.objects.all())
-    return HttpResponse(localAddresses, content_type='json')#just return httpresponse containing serialized objects of LocalAddress in json format
+def nearest_neighbor_endpoint(request):
+    # Retrieve the source and destination marker coordinates from the request data
+    payload = json.loads(request.body)
+    source_coords = payload.get('source')
+    destination_coords = payload.get('destination')
+    print(type(source_coords))
+    print(source_coords)
+    print(destination_coords)
 
-def counties_data(request):
-    counties = serialize('geojson', Counties.objects.all())
-    return HttpResponse(counties, content_type='json')#just return httpresponse containing serialized objects of LocalAddress in json format
+    #switch lat and long
+    source = Point(source_coords[1], source_coords[0])
+    destination = Point(destination_coords[1], destination_coords[0])
+    kdtree = extractNodes_from_roadsData_and_fitKDTree_toThe_nodes(request)
 
+    # Call the nearest neighbor finding function to get the nearest neighbors in numpy.int64 type
+    nearest_source, nearest_destination = nearest_neighbor(source, destination, kdtree)
+    print(type(nearest_source))
+
+    # Get the coordinates of the nearest points and convert it to list type
+    #the nearest_source and nearest_destination are of type numpy.int64 and JSON responses can only contain serializable data types. 
+    #To resolve the issue,convert the nearest_source and nearest_destination to a serializable data type, such as a list or a tuple, before returning it as a JSON response
+    nearest_source_coords = list(kdtree.data[nearest_source])
+    nearest_destination_coords = list(kdtree.data[nearest_destination])
+
+    #switch lat and long
+    nearest_source_coords[0], nearest_source_coords[1] = nearest_source_coords[1], nearest_source_coords[0]
+    nearest_destination_coords[0], nearest_destination_coords[1] = nearest_destination_coords[1], nearest_destination_coords[0]
+    print(nearest_source_coords)
+    print(nearest_destination_coords)
+
+    # Return the nearest neighbors as a JSON response
+    return JsonResponse({
+        'nearest_source': nearest_source_coords,
+        'nearest_destination': nearest_destination_coords
+    })
+
+#retrieve the road network graph data from the database and convert it into a suitable data structure(KDTree) that can be used with the routing algorithm
+def extractNodes_from_roadsData_and_fitKDTree_toThe_nodes(request):
+    # Retrieve road objects from the database
+    roads = RoadsData.objects.all()
+
+    # Initialize a list to store the road network nodes
+    nodes = []
+
+    print_count=0
+    # Loop through each road object in the database
+    for road in roads:
+        # Extract the MultiLineString geometry from the road object
+        road_geom = road.geom
+        
+        # Check if the geometry is a MultiLineString
+        if isinstance(road_geom, MultiLineString):
+            # Loop through each line string in the MultiLineString           
+            for line_string in road_geom:
+                if (print_count<1):                   
+                    print('*****************LINE STRING*********************\n')
+                    print(line_string)
+     
+                # Convert the line string into a shapely LineString object
+                line = LineString(line_string)
+                if (print_count<1):
+                    print('****************LINE*********************\n')  #output: LINESTRING (85.3228018 27.638524, 85.3232236 27.6390716, 85.3232812 27.6391001, 85.3233261 27.6391028, 85.323576 27.6389745)NEW
+                    print(line.wkt+'NEW\n')          
+
+                # Extract the coordinates of the line string
+                coords = np.array(line.coords)
+                if (print_count<1):
+                    print('****************LINE COORDS*********************\n')
+                    print(coords)
+                
+                # Add the extracted coordinates to the list of nodes
+                nodes.append(coords)
+            print_count = 2               
+
+    print('****************NODES*********************\n')
+    print(nodes[0])
+
+    # Concatenate all the nodes into a single 2D NumPy array
+    nodes = np.concatenate(nodes, axis=0)
+    print('****************CONCATENATED NODES*********************\n')
+    print(nodes[0])  #nodes is the list of nodes extracted from the RoadsData model
+
+    # Create the KDTree and fit it to the data
+    kdtree = KDTree(nodes)
+    print('****************KDTREE*********************\n')
+    print(kdtree)
+
+    #also create nodes and edges from the road data then save them to Node & Edge models inorder to use them to create the road network graph
+    nodes, edges = create_nodes_and_edges(roads)
+
+    return kdtree
+
+def create_nodes_and_edges(roads):
+    #Check if nodes and edges are already created and saved to avoid saving them again in the database
+    data_status = DataStatus.objects.first()
+    if not data_status or not data_status.nodes_and_edges_created:  #If no dataStatus model's record exist or if it exist but the record's nodes_and_edges_created field is False
+        nodes = []
+        edges = []
+        node_index = 0
+
+        for road in roads:
+            road_geom = road.geom
+            if isinstance(road_geom, MultiLineString):
+                for line_string in road_geom:
+                    line = LineString(line_string)
+                    coords = np.array(line.coords)
+                    start_index = node_index
+                    for coord in coords:
+                        node = Node(latitude=coord[0], longitude=coord[1])
+                        node.save()
+                        nodes.append(node)
+                        end_index = node_index
+                        if start_index != end_index:
+                            cost = calculate_cost(nodes[start_index], nodes[end_index])
+                            edge = Edge(start_node=nodes[start_index], end_node=nodes[end_index], cost=cost)
+                            edge.save()
+                            edges.append(edge)
+                            start_index = end_index
+                        node_index += 1
+
+        if not data_status:
+            data_status = DataStatus.objects.create(nodes_and_edges_created=True) #If no dataStatus model's record exist, created one with nodes_and_edges_created=True
+        else:
+            data_status.nodes_and_edges_created = True  #if it exist but the record's nodes_and_edges_created field is False then set it to True now
+            data_status.save()
+    else:
+        nodes = Node.objects.all()
+        edges = Edge.objects.all()
+
+    #Create graph from nodes and edges
+    graph = create_graph(nodes, edges)
+
+    #Create adjacent list from nodes and edges
+    adjacency_list = create_adjacency_list(nodes, edges)
+
+    return nodes, edges
+
+def calculate_cost(start, end):
+    # Extract the latitude and longitude of the start node
+    start_lat = start.latitude
+    start_lon = start.longitude 
+    # Extract the latitude and longitude of the end node
+    end_lat = end.latitude
+    end_lon = end.longitude
+
+    # Convert the latitudes and longitudes to radians
+    start_lat, start_lon = math.radians(start_lat), math.radians(start_lon)
+    end_lat, end_lon = math.radians(end_lat), math.radians(end_lon)
+
+    # Calculate the difference in latitudes and longitudes
+    lat_diff = end_lat - start_lat
+    lon_diff = end_lon - start_lon
+
+    # Apply the spherical law of cosines formula
+    a = math.sin(lat_diff / 2)**2 + math.cos(start_lat) * math.cos(end_lat) * math.sin(lon_diff / 2)**2 #square of the sine of half the latitude difference and the product of the cosines of the two latitudes and the square of the sine of half the longitude difference
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)) #inverse tangent of the square root of 'a' and the square root of one minus 'a' is calculated and multiplied by two to get the central angle between the two points
+    earth_radius = 6371  # Approximate radius of the earth in kilometers
+    distance = earth_radius * c
+
+    # Return the calculated distance as the cost
+    return distance
+
+def create_graph(nodes, edges):
+    graph = nx.Graph()
+    for node in nodes:
+        graph.add_node(node)
+    for edge in edges:
+        start_node = edge.start_node
+        end_node = edge.end_node
+        graph.add_edge(start_node, end_node, weight=edge.cost)
+    return graph
+
+def create_adjacency_list(nodes, edges):
+    adjacency_list = {}
+    for node in nodes:
+        adjacency_list[node] = [] # create an empty list for each node in the adjacency_list dictionary
+    for edge in edges:
+        start = edge.start_node
+        end = edge.end_node
+        cost = edge.cost
+        adjacency_list[start].append((end, cost)) #append a tuple (end, cost) to represent the connected end node (conencted with the start node) and the cost of the edge between the start node and the end node.
+        #ie. each key of adjacency_list dictionary represent start node of an edge and the value represent list of tuples where each tuple contains endnode of the edge(connected with the startnode) along with the cost of the edge
+    return adjacency_list

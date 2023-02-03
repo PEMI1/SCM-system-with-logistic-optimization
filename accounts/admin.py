@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, UserProfile, LocalAddress
+from .models import User, UserProfile, RoadsData
 from django.contrib.auth.admin import UserAdmin
 
 from leaflet.admin import LeafletGeoAdmin
@@ -14,15 +14,11 @@ class CustomUserAdmin(UserAdmin):
 class UserProfileAdmin(LeafletGeoAdmin):
     list_display =('user', 'address', 'location', 'created_at')
 
-class LocalAddressAdmin(LeafletGeoAdmin):
-    list_display =('province', 'district', 'unit_type', 'unit_name', 'district_c')
-    list_display_links = ( 'district','unit_name')
-
-
-
+class RoadsDataAdmin(LeafletGeoAdmin):
+    list_display =('osm_id', 'code', 'fclass', 'name', 'ref', 'oneway',)
 
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 
-admin.site.register(LocalAddress, LocalAddressAdmin)
+admin.site.register(RoadsData, RoadsDataAdmin)

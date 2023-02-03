@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import Point
 
 
 #base user manager allows you to edit the way user and superuser is created
@@ -123,32 +122,30 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.email
 
-
-#table to store geospatial info of nepal
-class LocalAddress(models.Model):
-    province = models.IntegerField()
-    district = models.CharField(max_length=50)
-    unit_type = models.CharField(max_length=50)
-    unit_name = models.CharField(max_length=50)
-    district_c = models.IntegerField()
-    shape_leng = models.FloatField()
-    shape_area = models.FloatField()
-    geom = models.MultiPolygonField(srid=4326)
-
-    def __str__(self):
-        return self.district
-
-    class Meta:
-        verbose_name_plural = "Local addresses"
-
-
-class Counties(models.Model):
-    counties = models.CharField(max_length=25)
-    codes = models.IntegerField()
-    cty_code = models.CharField(max_length=24)
-    dis = models.IntegerField(null=True)
-    geom = models.MultiPolygonField(srid=4326)
+class RoadsData(models.Model):
+    osm_id = models.CharField(max_length=12)
+    code = models.IntegerField()
+    fclass = models.CharField(max_length=28)
+    name = models.CharField(max_length=100, null=True)
+    ref = models.CharField(max_length=20,null=True)
+    oneway = models.CharField(max_length=1)
+    maxspeed = models.IntegerField(null=True)
+    layer = models.BigIntegerField()
+    bridge = models.CharField(max_length=1)
+    tunnel = models.CharField(max_length=1)
+    geom = models.MultiLineStringField(srid=4326)
 
     def __str__(self):
-        return self.counties
+        return self.osm_id
 
+class Node(models.Model):
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+
+class Edge(models.Model):
+    start_node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='start_node')
+    end_node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='end_node')
+    cost = models.FloatField()
+
+class DataStatus(models.Model):
+    nodes_and_edges_created = models.BooleanField(default=False)

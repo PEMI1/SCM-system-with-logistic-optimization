@@ -1,7 +1,8 @@
-from accounts.models import UserProfile
+from accounts.models import RoadsData, UserProfile
 from shipper.models import Shipper
 from vendor.models import Vendor
 from django.conf import settings
+
 
 def get_vendor(request):
     try:
@@ -32,6 +33,7 @@ def get_google_api(request):
 
 def get_paypal_client_id(request):
     return {'PAYPAL_CLIENT_ID':settings.PAYPAL_CLIENT_ID}
+
 
 
 
