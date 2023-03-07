@@ -131,7 +131,7 @@
 																	<div id="layer-list" style="position: absolute; top: 30px; right: 10px; z-index: 9999;">
 																	  <!-- The dropdown menu will be populated here -->
 																	</div>
-																	<div id="map" style="width: 800px; height: 300px;">
+																	<div id="map" style="width: 800px; height: 600px;">
 																		<!-- {% leaflet_map "gis" callback="window.our_layers" %} -->
 																		
 																	</div>
@@ -206,15 +206,15 @@
 <script type="text/javascript">
 
 	var map = L.map('map').setView([27.71, 85.32], 10);
-	map.zoomControl.remove();
+	//map.zoomControl.remove();
 
 	//Base layer
 	var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 	}).addTo(map);
 
-	//Road data layer
-	var roadLayer = new L.GeoJSON.AJAX("{% url 'roads_data' %}", {		
+	//Road layer
+	var roadLayer = new L.GeoJSON.AJAX("{% url 'road' %}", {		
 	}).addTo(map);
 
 	//Marker layer
@@ -289,8 +289,10 @@
 				console.log(response)
 				nearest_source = response.data['nearest_source']
 				nearest_destination = response.data['nearest_destination']
+				path = response.data['path']
 				console.log('nearest_source ==> ', nearest_source);
 				console.log('nearest_destination ==> ', nearest_destination);
+				console.log('path ==> ', path);
 				
 				// Remove the previous markers 
 				//markers.clearLayers();
@@ -299,8 +301,9 @@
 				// Add the new nearest source and destination markers
 				markers.addLayer(L.marker([nearest_source[0], nearest_source[1]]).bindPopup("Nearest-Source-node"));
 				markers.addLayer(L.marker([nearest_destination[0], nearest_destination[1]]).bindPopup("Nearest-Destination-node"));
+				// Highlight the path
+				var polyline = L.polyline(path, {color: 'red'}).addTo(map);
 
-				// Perform the routing algorithm using the response
 
 			})
 			.catch(function (error) {
@@ -308,7 +311,7 @@
 				
 			});
 		}
-	}); 
+	});  
 
 	
 	// Show/hide the dropdown menu when the stack icon is clicked
@@ -355,29 +358,5 @@
 	});
 
 </script>
-
-<!-- <script>
-    $(document).ready(function() {
-        $('.address-field').autocomplete({
-            source: function(request, response) {
-                $.ajax({
-                    url: 'https://nominatim.openstreetmap.org/search',
-                    dataType: 'json',
-                    data: {
-                        q: request.term,
-                        format: 'json'
-                    },
-                    success: function(data) {
-                        response(data);
-                    }
-                });
-            },
-            select: function(event, ui) {
-                // do something with the selected address, for example populate the location field with the coordinates
-                //profile_form.location = ui.item.lat + ', ' + ui.item.lon;
-            }
-        });
-    });
-</script> -->
 
 {% endblock %}

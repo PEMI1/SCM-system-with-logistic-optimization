@@ -29,9 +29,8 @@ urlpatterns = [
     path('customer/', include('customers.urls')),
     path('shipper/', include('shipper.urls')),
 
-    path('roads_data/', views.roads_data, name= 'roads_data'),
+    path('road/', views.road, name= 'road'),
     path('nearest_neighbor_endpoint/', views.nearest_neighbor_endpoint, name="nearest_neighbor_endpoint"),
-
 
 
 ]

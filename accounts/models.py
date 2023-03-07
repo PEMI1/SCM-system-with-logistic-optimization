@@ -138,14 +138,50 @@ class RoadsData(models.Model):
     def __str__(self):
         return self.osm_id
 
+# class Node(models.Model):
+#     latitude = models.FloatField()
+#     longitude = models.FloatField()
+
+#     def __str__(self):
+#         return f"({self.latitude}, {self.longitude})"
+
+# class Edge(models.Model):
+#     start_node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='start_node')
+#     end_node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='end_node')
+#     cost = models.FloatField()
+
+
+class AdjacencyList(models.Model):
+    data = models.JSONField()
+
+# class DataStatus(models.Model):
+#     nodes_and_edges_created = models.BooleanField(default=False)
+#     adjacency_list_created = models.BooleanField(default=False)
+
+class Road(models.Model):
+    name = models.CharField(max_length=100, null=True)
+    length_m = models.FloatField()
+    lineid = models.BigIntegerField()
+    lat_n1 = models.FloatField()
+    long_n1 = models.FloatField()
+    long_n2 = models.FloatField()
+    lat_n2 = models.FloatField()
+    geom = models.MultiLineStringField(srid=4326)
+
+    def __str__(self):
+        return str(self.lineid)
+
 class Node(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
 
+    def __str__(self):
+        return f"({self.latitude}, {self.longitude})"
+
 class Edge(models.Model):
     start_node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='start_node')
     end_node = models.ForeignKey(Node, on_delete=models.CASCADE, related_name='end_node')
-    cost = models.FloatField()
 
 class DataStatus(models.Model):
     nodes_and_edges_created = models.BooleanField(default=False)
+   
