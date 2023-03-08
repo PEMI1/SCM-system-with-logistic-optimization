@@ -471,7 +471,7 @@ def nearest_neighbor_endpoint(request):
     print(nearest_source_coords)
     print(nearest_destination_coords)
 
-    #perform floyd warshall algorithm********************************************************************************************************************************8
+    #perform floyd warshall algorithm********************************************************************************************************************************
     predecessor, distance = floyd_warshall_predecessor_and_distance(G, "weight")
     for i, (key, value) in enumerate(predecessor.items()):
         print(key, value)
@@ -501,12 +501,20 @@ def nearest_neighbor_endpoint(request):
                 for line_string in road.geom:
                     line = LineString(line_string)
                     coords = line.coords
+
+                    temp = []
                     for coord in coords:
-                        all_nodes.append(coord)
-            elif isinstance(road.geom, LineString):
-                coords = np.array(road.geom.coords)
-                for coord in coords:
-                    all_nodes.append(coord)
+                        temp.append(coord)
+                    if all_nodes and len(temp) > 0 and all_nodes[-1] != temp[0]:
+                        temp = temp[::-1]
+                    for t in temp:
+                        all_nodes.append(t)
+            # elif isinstance(road.geom, LineString):
+            #     coords = np.array(road.geom.coords)
+            #     for coord in coords:
+            #         all_nodes.append(coord)
+            print(all_nodes)
+            print("@@@@@@@@@@@@@@@@")
 
     all_nodes = [(lat, lng) for lng, lat in all_nodes]
     print(all_nodes)
