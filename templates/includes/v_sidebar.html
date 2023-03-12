@@ -5,7 +5,7 @@
             <li class="{% if '/vendor/profile/' == request.path %} active {% endif %} "><a href="{%url 'vprofile'%}"><i class="icon-building"></i>My Business</a></li>
             <li class="{% if '/vendor/menu-builder/' == request.path %} active {% endif %}" ><a href="{% url 'menu_builder'%}"><i class="icon-menu5"></i>Inventory</a></li>
             <li class="{% if '/my_orders/' in request.path or '/order_detail/' in request.path%} active {% endif %}" ><a href="{% url 'menu_builder'%}"><a href="{% url 'vendor_my_orders'%}"><i class="icon-add_shopping_cart"></i>Orders</a></li>
-            <li><a href="restaurant-earnings.html"><i class="icon-money"></i>Earnings</a></li>
+           
             <li><a class="logout-btn" href="{%url 'logout'%}"><i class="icon-log-out"></i>Signout</a></li>
         </ul>
     </div>

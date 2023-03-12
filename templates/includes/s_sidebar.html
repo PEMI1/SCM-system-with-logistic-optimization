@@ -4,7 +4,6 @@
             <li class="{% if '/shipperDashboard/' == request.path or '/shipper/' == request.path%} active {% endif %} "><a href="{%url 'shipper'%}"><i class="icon-dashboard3"></i>Dashboard</a></li>
             <li class="{% if '/my_orders/' in request.path  or '/order_detail/'  in request.path%} active {% endif %}"><a href="{%url 'shipper_my_orders'%}"><i class="icon-add_shopping_cart"></i>Shipment Orders</a></li>
             <li class="{% if '/shipper/profile/' == request.path %} active {% endif %} "><a href="{%url 'sprofile'%}"><i class="icon-build"></i>Profile Settings </a></li>
-            <li><a href="#"><i class="icon-unlock-alt"></i>Change Password</a></li>
             <li><a class="logout-btn" href="registration.html"><i class="icon-log-out"></i>Signout</a></li>
         </ul>
     </div>

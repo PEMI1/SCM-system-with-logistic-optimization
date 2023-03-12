@@ -10,5 +10,9 @@ urlpatterns = [
   path('my_orders/', views.my_orders, name='shipper_my_orders'),
 
   path('optimize_container/', views.optimize_container, name='optimize_container'),
+  path('dispatch_container/', views.dispatch_container, name='dispatch_container'),
+  path('route_road/', views.route_road, name= 'route_road'),
+  path('nearest_neighbor_endpoint/', views.nearest_neighbor_endpoint, name="nearest_neighbor_endpoint"),
+
 
 ]

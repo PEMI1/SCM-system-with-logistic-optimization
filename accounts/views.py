@@ -555,15 +555,15 @@ def floyd_warshall_predecessor_and_distance(G, weight="weight"):
         if undirected:
             dist[v][u] = min(e_weight, dist[v][u])
             pred[v][u] = v
-    for w in G:
-        dist_w = dist[w]  # save recomputation
+    for k in G:
+        dist_k = dist[k]  # save recomputation
         for u in G:
             dist_u = dist[u]  # save recomputation
             for v in G:
-                d = dist_u[w] + dist_w[v]
+                d = dist_u[k] + dist_k[v]
                 if dist_u[v] > d:
                     dist_u[v] = d
-                    pred[u][v] = pred[w][v]
+                    pred[u][v] = pred[k][v]
     return dict(pred), dict(dist)
 
 def reconstruct_path(source, target, predecessors):

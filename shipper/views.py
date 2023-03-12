@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 
@@ -13,6 +13,19 @@ from accounts.views import check_role_shipper
 
 import math
 
+from accounts.models import  Road, Node, Edge, DataStatus
+#routing
+from django.core.serializers import serialize
+from django.contrib.gis.geos import Point
+import numpy as np
+import json
+from django.contrib.gis.geos import MultiLineString
+from shapely.geometry import LineString
+from sklearn.neighbors import KDTree
+
+import geopandas as gpd
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 @login_required(login_url='login')
@@ -196,3 +209,181 @@ def knapsack(packages, max_volume_float):
             selected_items.append(packages[i-1])
             j -= packages[i-1]['volume']
     return dp[len(packages)][max_volume], selected_items
+
+
+def dispatch_container(request):
+    return render(request, 'shipper/route_road.html')
+
+def route_road(request):
+    road = serialize('geojson', Road.objects.all())
+    return HttpResponse(road, content_type='json')#just return httpresponse containing serialized objects of LocalAddress in json format
+
+# Create a nearest neighbor finding function using the KDTree
+def nearest_neighbor(source, destination, kdtree):
+    source = np.array([[source.x, source.y]])
+    destination = np.array([[destination.x, destination.y]])
+    distances, indices = kdtree.query(np.concatenate([source, destination]), return_distance=True, k=1)
+    return indices[0][0], indices[1][0]
+
+def nearest_neighbor_endpoint(request):
+    # Retrieve the source and destination marker coordinates from the request data***************************************************************************
+    payload = json.loads(request.body)
+    source_coords = payload.get('source')
+    destination_coords = payload.get('destination')
+    print(type(source_coords))
+    print(source_coords)
+    print(destination_coords)
+
+    #Convert coordinates to point form
+    source = Point(source_coords[0], source_coords[1])
+    destination = Point(destination_coords[0], destination_coords[1])
+
+    # Contruct road graph*************************************************************************************************************************************
+    segments = gpd.read_file('C:\\Users\\hp\\Desktop\\segment-intersection.shp')
+
+    G = nx.Graph()
+
+    for index, row in segments.iterrows():
+        # Add nodes for each endpoint of the line segment
+        node1 = (row['lat_n1'], row['long_n1'])
+        node2 = (row['lat_n2'], row['long_n2'])
+        G.add_node(node1)
+        G.add_node(node2)
+
+        # Add an edge between the two nodes
+        G.add_edge(node1, node2, weight=row['length_m'])
+
+    # Draw the graph and label the nodes and edges
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, with_labels=True)
+    labels = nx.get_edge_attributes(G, 'weight')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+
+    # Show the plot
+    #plt.show()
+
+    # Nearest neighbor node search*******************************************************************************************************************************
+    # Get all the nodes in G and pass them to fitKDTree_toThe_DatabaseNodes()
+    all_nodes = list(G.nodes())  
+    #create KDTree from the nodes of the graph G
+    kdtree = fitKDTree_toThe_DatabaseNodes(all_nodes)
+    print(type(kdtree))
+
+    # Call the nearest neighbor finding function to get the nearest neighbors in numpy.int64 type
+    nearest_source, nearest_destination = nearest_neighbor(source, destination, kdtree)
+    print(type(nearest_source))
+
+    # Get the coordinates of the nearest points and convert it to list type
+    #the nearest_source and nearest_destination are of type numpy.int64 and JSON responses can only contain serializable data types. 
+    #To resolve the issue,convert the nearest_source and nearest_destination to a serializable data type, such as a list or a tuple, before returning it as a JSON response
+    nearest_source_coords = list(kdtree.data[nearest_source])
+    nearest_destination_coords = list(kdtree.data[nearest_destination])
+
+    print(nearest_source_coords)
+    print(nearest_destination_coords)
+
+    #perform floyd warshall algorithm********************************************************************************************************************************
+    predecessor, distance = floyd_warshall_predecessor_and_distance(G, "weight")
+    for i, (key, value) in enumerate(predecessor.items()):
+        print(key, value)
+        if i == 1:
+            break
+    first_key1, first_value1 = next(iter(distance.items()))
+    print(first_key1, first_value1)
+
+    path = reconstruct_path(tuple(nearest_source_coords,),tuple(nearest_destination_coords,), predecessor)
+    print(path)
+
+    #convert path from tuple to list
+    path_coords = [[point[0], point[1]] for point in path]
+
+    all_nodes = []
+
+    for i in range(len(path_coords)-1):
+        u, v = path_coords[i], path_coords[i+1]
+        u_x, u_y = u[0], u[1]
+        v_x, v_y = v[0], v[1]
+
+        roads = Road.objects.filter(lat_n1__in=[u_x, v_x], lat_n2__in=[u_x, v_x], long_n1__in=[u_y, v_y], long_n2__in=[u_y, v_y])
+        print(roads)
+
+        for road in roads:
+            if isinstance(road.geom, MultiLineString):
+                for line_string in road.geom:
+                    line = LineString(line_string)
+                    coords = line.coords
+
+                    temp = []
+                    for coord in coords:
+                        temp.append(coord)
+                    if all_nodes and len(temp) > 0 and all_nodes[-1] != temp[0]:
+                        temp = temp[::-1]
+                    for t in temp:
+                        all_nodes.append(t)
+            # elif isinstance(road.geom, LineString):
+            #     coords = np.array(road.geom.coords)
+            #     for coord in coords:
+            #         all_nodes.append(coord)
+            print(all_nodes)
+            print("@@@@@@@@@@@@@@@@")
+
+    all_nodes = [(lat, lng) for lng, lat in all_nodes]
+    print(all_nodes)
+
+    # Return the nearest neighbors & shortest path as a JSON response
+    return JsonResponse({
+        'nearest_source': nearest_source_coords,
+        'nearest_destination': nearest_destination_coords,
+        'path': all_nodes,
+    })
+
+
+#convert the nodes into a suitable data structure(KDTree) that can be used to find nearest road network node from the selected source and destination coordinates
+def fitKDTree_toThe_DatabaseNodes(nodes):
+    nodes_array = np.array([[node[0], node[1]] for node in nodes]) #The KDTree expects an np.array input. So put all the nodes's coordinates into an np.array ie.np.array wil be an array of coordinates of float type
+    kdtree = KDTree(nodes_array) # Create the KDTree and fit it to the nodes
+    print('****************KDTREE*********************\n')
+    print(kdtree)
+    return kdtree
+
+def floyd_warshall_predecessor_and_distance(G, weight="weight"):
+    from collections import defaultdict
+
+    # dictionary-of-dictionaries representation for dist and pred
+    # use some defaultdict magick here
+    # for dist the default is the floating point inf value
+    dist = defaultdict(lambda: defaultdict(lambda: float("inf")))
+    for u in G:
+        dist[u][u] = 0
+    pred = defaultdict(dict)
+    # initialize path distance dictionary to be the adjacency matrix
+    # also set the distance to self to 0 (zero diagonal)
+    undirected = not G.is_directed()
+    for u, v, d in G.edges(data=True):
+        e_weight = d.get(weight, 1.0)
+        dist[u][v] = min(e_weight, dist[u][v])
+        pred[u][v] = u
+        if undirected:
+            dist[v][u] = min(e_weight, dist[v][u])
+            pred[v][u] = v
+    for w in G:
+        dist_w = dist[w]  # save recomputation
+        for u in G:
+            dist_u = dist[u]  # save recomputation
+            for v in G:
+                d = dist_u[w] + dist_w[v]
+                if dist_u[v] > d:
+                    dist_u[v] = d
+                    pred[u][v] = pred[w][v]
+    return dict(pred), dict(dist)
+
+def reconstruct_path(source, target, predecessors):
+    if source == target:
+        return []
+    prev = predecessors[source]
+    curr = prev[target]
+    path = [target, curr]
+    while curr != source:
+        curr = prev[curr]
+        path.append(curr)
+    return list(reversed(path))

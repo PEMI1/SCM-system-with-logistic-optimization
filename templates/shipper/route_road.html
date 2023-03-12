@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+
+{%load static%}
+{%load leaflet_tags%}
+
+{%block content%}
+
+	<!-- Main Section Start -->
+    <div class="main-section">
+       {%include 'shipper/cover.html'%}
+        <div class="page-section account-header buyer-logged-in">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+                        <!--load sidebar here-->
+                        {% include 'includes/s_sidebar.html' %}
+                    </div>
+                    <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+                        <div class="user-dashboard loader-holder">
+                            <div class="user-holder">
+                                <h5 class="text-uppercase">Analyse shortest route</h5>
+                                <hr>
+                                <div class="row">
+									<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+										<label for="source">Source:</label>
+										<input type="text" id="source" />
+
+									</div>
+									<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5">
+									<label for="destination">Destination:</label>
+									<input type="text" id="destination" />
+									
+									</div>
+									<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+										<a href="#" class="btn btn-info " style="top: 31px; position: relative; padding: 10px 1.75em;" id="go">Go</a>
+									</div>
+
+                                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                        <div class="field-holder">
+                                            <label>Location *</label>
+                                            <div id="layers-stack-control">
+                                                <a href="#" class="btn btn-default float-right" id="layer-dropdown" style="position: absolute; top: 10px; right: 10px; z-index: 9999;">
+                                                  <i class="icon-stack"></i>
+                                                </a>
+                                                <div id="layer-list" style="position: absolute; top: 30px; right: 10px; z-index: 9999;">
+                                                  <!-- The dropdown menu will be populated here -->
+                                                </div>
+                                                <div id="map" style="width: 800px; height: 600px;">
+                                                    <!-- {% leaflet_map "gis" callback="window.our_layers" %} -->
+                                                    
+                                                </div>
+                                            </div>
+                                            
+                                            
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                        
+                            </div>
+                        </div>    
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Main Section End -->
+
+{% include 'includes/alerts.html'%}
+
+<script type="text/javascript">
+
+	var map = L.map('map').setView([27.716, 85.302], 17);
+	//map.zoomControl.remove();
+
+	//Base layer
+	var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	}).addTo(map);
+
+	//Road layer
+	var roadLayer = new L.GeoJSON.AJAX("{% url 'route_road' %}", {		
+	}).addTo(map);
+
+	//Marker layer
+	var markers = new L.MarkerClusterGroup();
+	map.addLayer(markers);
+
+	// Initialize source and destination geocoders
+	var sourceGeocoder = L.Control.geocoder({
+		defaultMarkGeocode: false,
+		collapsed: false,
+		placeholder: "search source..",
+	}).on("markgeocode", function (e) {
+		document.getElementById("source").value = e.geocode.name;
+		sourceLat = e.geocode.center.lat;
+  		sourceLng = e.geocode.center.lng;
+		console.log(sourceLat)
+		console.log(sourceLng)
+		if (markers.getLayers().length === 4){
+			// Remove the previous markers 
+			markers.clearLayers();
+			map.removeLayer(polyline)
+		}
+		var sourcemarker = L.marker([sourceLat, sourceLng]).addTo(markers);
+		sourcemarker.bindPopup(e.geocode.name);
+	});
+	
+	var destinationGeocoder = L.Control.geocoder({
+		defaultMarkGeocode: false,
+		collapsed: false,
+		placeholder: "search destination..",
+	}).on("markgeocode", function (e) {
+		document.getElementById("destination").value = e.geocode.name;
+		destinationLat = e.geocode.center.lat;
+  		destinationLng = e.geocode.center.lng;
+		if (markers.getLayers().length === 4){
+			// Remove the previous markers 
+			markers.clearLayers();
+			map.removeLayer(polyline)
+		}
+		var destinationmarker = L.marker([destinationLat, destinationLng]).addTo(markers);
+		destinationmarker.bindPopup(e.geocode.name);
+	});
+	
+	// Add geocoders to map and position them on the sides of the map
+	sourceGeocoder.addTo(map);
+	destinationGeocoder.addTo(map);
+	document.getElementsByClassName("leaflet-control-geocoder")[0];
+	document.getElementsByClassName("leaflet-control-geocoder")[1];
+	
+
+	var polyline
+
+	$("#go").click(function(e) {
+		e.preventDefault();
+		
+		//The JavaScript code listens for clicks on the map, and when a click occurs, it adds a marker to the map at the click location. 
+		//When there are two markers, the code makes an API call to the nearest_neighbor_endpoint view in the Django application, passing the coordinates of the two markers as parameters in the request. 
+		//The view retrieves the road network data from the database, converts it into a KDTree data structure, and uses the KDTree and the source and destination marker coordinates to find the nearest nodes in the road network to the source and destination markers.
+		//The view returns the indices of the nearest nodes as a JSON response, which is then displayed in the JavaScript code
+		if (markers.getLayers().length === 2) {
+			//get csrf token in js
+			function getCookie(name) {
+				let cookieValue = null;
+				if (document.cookie && document.cookie !== '') {
+					const cookies = document.cookie.split(';');
+					for (let i = 0; i < cookies.length; i++) {
+						const cookie = cookies[i].trim();
+						// Does this cookie string begin with the name we want?
+						if (cookie.substring(0, name.length + 1) === (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+			return cookieValue;
+			}
+			const csrftoken = getCookie('csrftoken');
+			console.log('csrftoken ==> ', csrftoken);
+
+		  	//Find nearest road from the selected markers 
+			var source = markers.getLayers()[0].getLatLng();
+			var destination = markers.getLayers()[1].getLatLng();
+			console.log('source ==> ', source);
+			console.log('destination ==> ', destination);			
+
+			// Make an API call to the nearest neighbor finding endpoint
+			axios.post('/nearest_neighbor_endpoint/', {
+				source: [source.lat, source.lng],
+				destination: [destination.lat, destination.lng]
+			}, 
+			{
+				headers: {
+					'X-CSRFToken': csrftoken
+				}
+			})
+			.then(function (response) {
+				// Handle the response from the API				
+				console.log(response)
+				nearest_source = response.data['nearest_source']
+				nearest_destination = response.data['nearest_destination']
+				path = response.data['path']
+				console.log('nearest_source ==> ', nearest_source);
+				console.log('nearest_destination ==> ', nearest_destination);
+				console.log('path ==> ', path);
+				
+
+				// Add the new nearest source and destination markers
+				markers.addLayer(L.marker([nearest_source[0], nearest_source[1]]).bindPopup("Nearest-Source-node"));
+				markers.addLayer(L.marker([nearest_destination[0], nearest_destination[1]]).bindPopup("Nearest-Destination-node"));
+				// Highlight the path
+				polyline = L.polyline(path, {color: 'red'}).addTo(map);
+
+
+			})
+			.catch(function (error) {
+				// Handle the error
+				
+			});
+		}
+	});
+	
+
+
+	map.on('click', function(e) {
+
+		if (markers.getLayers().length === 4){
+			// Remove the previous markers 
+			markers.clearLayers();
+			map.removeLayer(polyline)
+		}
+		// Create a marker at the click location
+		var marker = L.marker(e.latlng).addTo(markers);
+
+		marker.bindPopup(e.latlng.name);
+
+	  
+		//The JavaScript code listens for clicks on the map, and when a click occurs, it adds a marker to the map at the click location. 
+		//When there are two markers, the code makes an API call to the nearest_neighbor_endpoint view in the Django application, passing the coordinates of the two markers as parameters in the request. 
+		//The view retrieves the road network data from the database, converts it into a KDTree data structure, and uses the KDTree and the source and destination marker coordinates to find the nearest nodes in the road network to the source and destination markers.
+		//The view returns the indices of the nearest nodes as a JSON response, which is then displayed in the JavaScript code
+		if (markers.getLayers().length === 2) {
+			//get csrf token in js
+			function getCookie(name) {
+				let cookieValue = null;
+				if (document.cookie && document.cookie !== '') {
+					const cookies = document.cookie.split(';');
+					for (let i = 0; i < cookies.length; i++) {
+						const cookie = cookies[i].trim();
+						// Does this cookie string begin with the name we want?
+						if (cookie.substring(0, name.length + 1) === (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+			return cookieValue;
+			}
+			const csrftoken = getCookie('csrftoken');
+			console.log('csrftoken ==> ', csrftoken);
+
+		  	//Find nearest road from the selected markers 
+			var source = markers.getLayers()[0].getLatLng();
+			var destination = markers.getLayers()[1].getLatLng();
+			console.log('source ==> ', source);
+			console.log('destination ==> ', destination);			
+
+			// Make an API call to the nearest neighbor finding endpoint
+			axios.post('/nearest_neighbor_endpoint/', {
+				source: [source.lat, source.lng],
+				destination: [destination.lat, destination.lng]
+			}, 
+			{
+				headers: {
+					'X-CSRFToken': csrftoken
+				}
+			})
+			.then(function (response) {
+				// Handle the response from the API				
+				console.log(response)
+				nearest_source = response.data['nearest_source']
+				nearest_destination = response.data['nearest_destination']
+				path = response.data['path']
+				console.log('nearest_source ==> ', nearest_source);
+				console.log('nearest_destination ==> ', nearest_destination);
+				console.log('path ==> ', path);
+				
+				// Remove the previous markers 
+				//markers.clearLayers();
+				
+
+				// Add the new nearest source and destination markers
+				markers.addLayer(L.marker([nearest_source[0], nearest_source[1]]).bindPopup("Nearest-Source-node"));
+				markers.addLayer(L.marker([nearest_destination[0], nearest_destination[1]]).bindPopup("Nearest-Destination-node"));
+				// Highlight the path
+				polyline = L.polyline(path, {color: 'red'}).addTo(map);
+
+
+			})
+			.catch(function (error) {
+				// Handle the error
+				
+			});
+		}
+	});  
+
+	
+	// Show/hide the dropdown menu when the stack icon is clicked
+	$("#layer-dropdown").click(function(e) {
+		$(this).remove();
+		e.preventDefault();
+		
+		// Add the layers to the dropdown menu
+		var layers = [		
+			{ name: "Roads", layer: roadLayer },
+			{ name: "Base", layer: tileLayer },
+			{ name: "Markers", layer: markers }
+		];
+		
+		for (var i = 0; i < layers.length; i++) {
+			var layer = layers[i];
+			$("#layer-list").append(
+			'<div><input type="checkbox" checked id="' +
+				layer.name +
+				'"/><label for="' +
+				layer.name +
+				'">' +
+				layer.name +
+				"</label></div>"
+			);
+		
+			// Show/hide the layer when the checkbox is clicked
+			$("#" + layer.name).click(function(e) {
+			var checkbox = e.target;
+			var layer = null;
+			for (var i = 0; i < layers.length; i++) {
+				if (layers[i].name == checkbox.id) {
+					layer = layers[i].layer;
+					break;
+				}
+			}
+			if (checkbox.checked) {
+				map.addLayer(layer);
+			} else {
+				map.removeLayer(layer);
+			}
+			});
+		}
+	});
+
+</script>
+
+{% endblock %}

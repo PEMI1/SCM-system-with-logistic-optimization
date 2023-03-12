@@ -118,29 +118,14 @@
 															<div class="field-holder">
 																<label>Address *</label>
 																{{profile_form.address}}
-																<small class="text-muted float-right">powered by OSM</small>
 															</div>
 														</div>
-														<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+														<!-- <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 															<div class="field-holder">
 																<label>Location *</label>
-																<div id="layers-stack-control">
-																	<a href="#" class="btn btn-default float-right" id="layer-dropdown" style="position: absolute; top: 10px; right: 10px; z-index: 9999;">
-																	  <i class="icon-stack"></i>
-																	</a>
-																	<div id="layer-list" style="position: absolute; top: 30px; right: 10px; z-index: 9999;">
-																	  <!-- The dropdown menu will be populated here -->
-																	</div>
-																	<div id="map" style="width: 800px; height: 600px;">
-																		<!-- {% leaflet_map "gis" callback="window.our_layers" %} -->
-																		
-																	</div>
-																</div>
-																
-																
-																
+																	
 															</div>
-														</div>
+														</div> -->
 													
 														<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
 															<div class="field-holder">
@@ -203,160 +188,6 @@
     <!-- Main Section End -->
 
 {% include 'includes/alerts.html'%}
-<script type="text/javascript">
 
-	var map = L.map('map').setView([27.71, 85.32], 10);
-	//map.zoomControl.remove();
-
-	//Base layer
-	var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-	}).addTo(map);
-
-	//Road layer
-	var roadLayer = new L.GeoJSON.AJAX("{% url 'road' %}", {		
-	}).addTo(map);
-
-	//Marker layer
-	var markers = new L.MarkerClusterGroup();
-	map.addLayer(markers);
-
-	var markerCounter = 0;
-
-	map.on('click', function(e) {
-
-		// Limit the number of markers to 2
-		if (markerCounter >= 2) {
-			return;
-		}
-		// Create a marker at the click location
-		var marker = L.marker(e.latlng).addTo(markers);
-		if (markerCounter ==0){
-			marker.bindPopup("Source");
-		}else{
-			marker.bindPopup("Destination");
-		}
-
-		// Store the latitude and longitude
-		var lat = e.latlng.lat;
-		var lng = e.latlng.lng;
-	  
-		// Limit the number of markers
-		markerCounter++;
-	  
-		//The JavaScript code listens for clicks on the map, and when a click occurs, it adds a marker to the map at the click location. 
-		//When there are two markers, the code makes an API call to the nearest_neighbor_endpoint view in the Django application, passing the coordinates of the two markers as parameters in the request. 
-		//The view retrieves the road network data from the database, converts it into a KDTree data structure, and uses the KDTree and the source and destination marker coordinates to find the nearest nodes in the road network to the source and destination markers.
-		//The view returns the indices of the nearest nodes as a JSON response, which is then displayed in the JavaScript code
-		if (markers.getLayers().length === 2) {
-			//get csrf token in js
-			function getCookie(name) {
-				let cookieValue = null;
-				if (document.cookie && document.cookie !== '') {
-					const cookies = document.cookie.split(';');
-					for (let i = 0; i < cookies.length; i++) {
-						const cookie = cookies[i].trim();
-						// Does this cookie string begin with the name we want?
-						if (cookie.substring(0, name.length + 1) === (name + '=')) {
-							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-							break;
-						}
-					}
-				}
-			return cookieValue;
-			}
-			const csrftoken = getCookie('csrftoken');
-			console.log('csrftoken ==> ', csrftoken);
-
-		  	//Find nearest road from the selected markers 
-			var source = markers.getLayers()[0].getLatLng();
-			var destination = markers.getLayers()[1].getLatLng();
-			console.log('source ==> ', source);
-			console.log('destination ==> ', destination);			
-
-			// Make an API call to the nearest neighbor finding endpoint
-			axios.post('/nearest_neighbor_endpoint/', {
-				source: [source.lat, source.lng],
-				destination: [destination.lat, destination.lng]
-			}, 
-			{
-				headers: {
-					'X-CSRFToken': csrftoken
-				}
-			})
-			.then(function (response) {
-				// Handle the response from the API				
-				console.log(response)
-				nearest_source = response.data['nearest_source']
-				nearest_destination = response.data['nearest_destination']
-				path = response.data['path']
-				console.log('nearest_source ==> ', nearest_source);
-				console.log('nearest_destination ==> ', nearest_destination);
-				console.log('path ==> ', path);
-				
-				// Remove the previous markers 
-				//markers.clearLayers();
-				
-
-				// Add the new nearest source and destination markers
-				markers.addLayer(L.marker([nearest_source[0], nearest_source[1]]).bindPopup("Nearest-Source-node"));
-				markers.addLayer(L.marker([nearest_destination[0], nearest_destination[1]]).bindPopup("Nearest-Destination-node"));
-				// Highlight the path
-				var polyline = L.polyline(path, {color: 'red'}).addTo(map);
-
-
-			})
-			.catch(function (error) {
-				// Handle the error
-				
-			});
-		}
-	});  
-
-	
-	// Show/hide the dropdown menu when the stack icon is clicked
-	$("#layer-dropdown").click(function(e) {
-		$(this).remove();
-		e.preventDefault();
-		
-		// Add the layers to the dropdown menu
-		var layers = [		
-			{ name: "Roads", layer: roadLayer },
-			{ name: "Base", layer: tileLayer },
-			{ name: "Markers", layer: markers }
-		];
-		
-		for (var i = 0; i < layers.length; i++) {
-			var layer = layers[i];
-			$("#layer-list").append(
-			'<div><input type="checkbox" checked id="' +
-				layer.name +
-				'"/><label for="' +
-				layer.name +
-				'">' +
-				layer.name +
-				"</label></div>"
-			);
-		
-			// Show/hide the layer when the checkbox is clicked
-			$("#" + layer.name).click(function(e) {
-			var checkbox = e.target;
-			var layer = null;
-			for (var i = 0; i < layers.length; i++) {
-				if (layers[i].name == checkbox.id) {
-					layer = layers[i].layer;
-					break;
-				}
-			}
-			if (checkbox.checked) {
-				map.addLayer(layer);
-			} else {
-				map.removeLayer(layer);
-			}
-			});
-		}
-	});
-
-</script>
 
 {% endblock %}

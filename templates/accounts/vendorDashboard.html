@@ -63,7 +63,7 @@
                                     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                         <div class="user-orders-list">
                                             <div class="responsive-table">
-                                                <table class="table table-hover" id="table-cell-check">
+                                                <table class="table table-hover" id="table-cell-check" style="line-height: 1.5;">
                                                     <thead>
                                                       <tr>
                                                         <th scope="col">Order #</th>
@@ -78,11 +78,11 @@
                                                     <tbody>
                                                         {%for order in recent_orders%}
                                                             <tr>
-                                                                <td>{{order.order_number}}</td>
-                                                                <td>{{order.name}}</td>                                                      
-                                                                <td>${{order.get_total_by_vendor.grand_total}}</td>
-                                                                <td>{{order.status}}</td>
-                                                                <td id="shipper-cell">   
+                                                                <td style="line-height: 1.2;">{{order.order_number}}</td>
+                                                                <td style="line-height: 1.2;">{{order.name}}</td>                                                      
+                                                                <td style="line-height: 1.2;">${{order.get_total_by_vendor.grand_total}}</td>
+                                                                <td style="line-height: 1.2;">{{order.status}}</td>
+                                                                <td id="shipper-cell" style="line-height: 1.5;">   
 
                                                                     {% for shiporder in shiporders %}
                                                                         {% if shiporder.order == order %}
@@ -95,7 +95,7 @@
                                                                     <a href="{%url 'assign_shipper' order.order_number%}" ><i id="truck-{{order.id}}" class="icon-local_shipping text-danger"></i></a>                                                                                                                       
 
                                                                 </td>
-                                                                <td>{{order.created_at}}</td>
+                                                                <td style="line-height: 1.5;">{{order.created_at}}</td>
                                                                 <td><a href="{%url 'vendor_order_detail' order.order_number%}" style="color:unset;"><i class="fa fa-info-circle"></i></a> &nbsp; 
                                                                     </td>
                                                             </tr>
